@@ -340,6 +340,7 @@ namespace WindowsFormsApplication2
                         parentsPrev.Add(new Kluster(new Point(MoveTo.X, MoveTo.Y), String.Format("Kluster{0}", parentIndex)));
                         parentCount += 1;
                     }
+                    cc.parentCount.Text = parentCount.ToString();
                 }
                 else
                 {

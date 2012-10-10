@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ClusterController));
             this.startBut = new System.Windows.Forms.Button();
             this.button1 = new System.Windows.Forms.Button();
             this.clusterCount = new System.Windows.Forms.TextBox();
@@ -230,6 +231,7 @@
             this.Controls.Add(this.startBut);
             this.Controls.Add(this.trackBar1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "ClusterController";
             this.Text = "ClusterController";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.ClusterController_FormClosing);
