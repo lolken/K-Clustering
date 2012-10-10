@@ -127,7 +127,7 @@ namespace WindowsFormsApplication2
             {
                 Point p = getAvgPoint(sats[i]);
                 if (p.X != -1000 && p.Y != -1000)
-                    if (i != parentIndex)
+                    if (parents[i].ID != parentGUID)
                         parents[i].Location = p;
             }
 
@@ -184,7 +184,8 @@ namespace WindowsFormsApplication2
             parents.Clear();
             sats.Clear();
             parentsPrev.Clear();
-            ColorsExample.Clear();
+            ColorLookup.Clear();
+            //ColorsExample.Clear();
             for (int i = 0; i < clusterCount; i++)
                 sats.Add(new List<Point>());
 
@@ -266,10 +267,13 @@ namespace WindowsFormsApplication2
             {
                 if (!ColorLookup.ContainsKey(parents[i].ID))
                     ColorLookup.Add(parents[i].ID, GetRandomColor());
-                if (i != parentIndex)
-                    graphicsObj.DrawIcon(icon, new Rectangle(parents[i].X - 25, parents[i].Y - 25, 50, 50));
-                else
+                if (parents[i].ID == parentGUID)
+                    graphicsObj.DrawIcon(icon, new Rectangle(parents[i].X - 50, parents[i].Y - 50, 100, 100));
+                else if (parents[i].ID == eatenGUID)
                     graphicsObj.DrawIcon(icon, new Rectangle(parents[i].X - 40, parents[i].Y - 40, 80, 80));
+                else
+                    graphicsObj.DrawIcon(icon, new Rectangle(parents[i].X - 25, parents[i].Y - 25, 50, 50));
+                    
             }
 
             if (!Quality)
@@ -313,7 +317,7 @@ namespace WindowsFormsApplication2
         Point ClusterParent;
         Point MoveTo = new Point(0, 0);
         Point Prev = new Point(0, 0);
-        int parentIndex = -1;
+        int parentGUID = -1;
 
         int GetAvailableGUID()
         {
@@ -331,7 +335,7 @@ namespace WindowsFormsApplication2
         {
             if (!t.Enabled)
                 return;
-            //Graphics graphObj = this.CreateGraphics();
+
             MoveTo = new Point(e.X, e.Y);
 
             if (e.Button == System.Windows.Forms.MouseButtons.Left)
@@ -348,28 +352,16 @@ namespace WindowsFormsApplication2
                     }
                 });
 
-                parentIndex = parents.FindIndex(pnt => { return pnt.Location == ClusterParent; });
+                int parentindex = parents.FindIndex(pnt => { return pnt.Location == ClusterParent; });
+                parentGUID = parents[parentindex].ID;
 
                 if (ModifierKeys == Keys.Control)
                 {
                     if (min < 25)
-                    {
-                        if (parents.Count > 1)
-                        {
-                            ColorLookup.Remove(parents[parentIndex].ID);
-                            parents.RemoveAt(parentIndex);
-                            parentsPrev.RemoveAt(parentIndex);
-                            parentCount -= 1;
-
-                        }
-                    }
+                        RemoveParent(parentGUID);
                     else
-                    {
-                        parents.Add(new Kluster(new Point(MoveTo.X, MoveTo.Y), GetAvailableGUID()));
-                        parentsPrev.Add(new Kluster(new Point(MoveTo.X, MoveTo.Y), GetAvailableGUID()));
-                        parentCount += 1;
-                        ColorLookup.Add(parents[parents.Count - 1].ID, GetRandomColor());
-                    }
+                        AddParent();
+
                     cc.parentCount.Text = parentCount.ToString();
                 }
                 else
@@ -382,28 +374,64 @@ namespace WindowsFormsApplication2
                 }
             }
         }
+        void RemoveParent(int GUID)
+        {
+            if (parents.Count > 1)
+            {
+                ColorLookup.Remove(GUID);
+                parents.Remove(parents.Find(k => { return k.ID == GUID; }));
+                parentsPrev.Remove(parentsPrev.Find(k => { return k.ID == GUID; }));
+                parentCount -= 1;
 
+            }
+        }
+        void AddParent()
+        {
+            parents.Add(new Kluster(new Point(MoveTo.X, MoveTo.Y), GetAvailableGUID()));
+            parentsPrev.Add(new Kluster(new Point(MoveTo.X, MoveTo.Y), GetAvailableGUID()));
+            parentCount += 1;
+            if (!ColorLookup.ContainsKey(parents[parents.Count - 1].ID))
+                ColorLookup.Add(parents[parents.Count - 1].ID, GetRandomColor());
+            else
+                ColorLookup[parents[parents.Count - 1].ID] = GetRandomColor();
+        }
         private void Form1_MouseMove(object sender, MouseEventArgs e)
         {
             if (moused)
             {
                 MoveTo = new Point(e.X, e.Y);
+
+                int parentid = parents.FindIndex(pnt => { return pnt.ID == parentGUID; });
+                parents[parentid].Location = new Point(parents[parentid].X + (MoveTo.X - Prev.X), parents[parentid].Y + (MoveTo.Y - Prev.Y));
+
+                int min = int.MaxValue;
+                double distance = 0;
+                Point eatme = new Point(-1000, -1000);
                 for (int i = 0; i < parents.Count; i++)
                 {
-                    if (parentIndex == i)
+                    if (parents[i].ID != parentGUID)
                     {
-                        parents[i].Location = new Point(parents[i].X + (MoveTo.X - Prev.X), parents[i].Y + (MoveTo.Y - Prev.Y));
-                        break;
+                        distance = getDistance(parents[i].Location, parents[parentid].Location);
+                        if (distance < min)
+                        {
+                            min = (int)distance;
+                            eatenGUID = parents[i].ID;
+                        }
                     }
                 }
+
+                if (min < 50)
+                    RemoveParent(eatenGUID);
+                
                 Prev = MoveTo;
             }
         }
-
+        int eatenGUID = -1;
         private void Form1_MouseUp(object sender, MouseEventArgs e)
         {
             moused = false;
-            parentIndex = -1;
+            parentGUID = -1;
+            eatenGUID = -1;
         }
 
         private void Form1_Load(object sender, EventArgs e)
