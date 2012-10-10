@@ -72,7 +72,6 @@
             // 
             // clusterCount
             // 
-            this.clusterCount.Enabled = false;
             this.clusterCount.Location = new System.Drawing.Point(8, 25);
             this.clusterCount.Name = "clusterCount";
             this.clusterCount.Size = new System.Drawing.Size(100, 20);
@@ -82,7 +81,6 @@
             // 
             // clusterRadius
             // 
-            this.clusterRadius.Enabled = false;
             this.clusterRadius.Location = new System.Drawing.Point(8, 97);
             this.clusterRadius.Name = "clusterRadius";
             this.clusterRadius.Size = new System.Drawing.Size(100, 20);
@@ -92,7 +90,6 @@
             // 
             // parentCount
             // 
-            this.parentCount.Enabled = false;
             this.parentCount.Location = new System.Drawing.Point(8, 61);
             this.parentCount.Name = "parentCount";
             this.parentCount.Size = new System.Drawing.Size(100, 20);
@@ -102,7 +99,6 @@
             // 
             // satcount
             // 
-            this.satcount.Enabled = false;
             this.satcount.Location = new System.Drawing.Point(8, 136);
             this.satcount.Name = "satcount";
             this.satcount.Size = new System.Drawing.Size(100, 20);
@@ -249,8 +245,8 @@
         private System.Windows.Forms.Button button1;
         private System.Windows.Forms.TextBox clusterCount;
         private System.Windows.Forms.TextBox clusterRadius;
-        private System.Windows.Forms.TextBox parentCount;
-        private System.Windows.Forms.TextBox satcount;
+        public System.Windows.Forms.TextBox parentCount;
+        public System.Windows.Forms.TextBox satcount;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Label label3;

@@ -18,8 +18,9 @@ namespace WindowsFormsApplication2
         public int parentCount = 50;
         public int interval = (int)(1000.0 / 60.0);
         public int clusterCount = 300;
-        public int satCount = 50;
+        public int satCountOriginal = 50;
         public int Scale = 1;
+        double OriginalArea = -1;
 
         //Dictionary<int, Color> ClusterColors = new Dictionary<int, Color>();
 
@@ -44,13 +45,14 @@ namespace WindowsFormsApplication2
             FrameRater.Tick += FrameRater_Tick;
             FrameRater.Interval = 1000;
             this.DoubleBuffered = true;
-            makeboard();
+            OriginalArea = this.Size.Width * this.Size.Height;
+            //makeboard();
 
             Bitmap bmp = new Bitmap(kMeans.Properties.Resources.target);
             icon = Icon.FromHandle(bmp.GetHicon());
-
             cc = new ClusterController(this);
             cc.Show(this);
+            
         }
 
         void FrameRater_Tick(object sender, EventArgs e)
@@ -179,6 +181,7 @@ namespace WindowsFormsApplication2
                 sats.Add(new List<Point>());
 
             Size size = this.Size;
+            
             Point random = new Point(-1000,-1000);
             for (int i = 0; i < parentCount; i++)
             {
@@ -190,6 +193,10 @@ namespace WindowsFormsApplication2
 
             random = new Point(-1000,-1000);
             Point RandomClusterPoint = new Point(-1000,-1000);
+            double density = Math.Sqrt(((double)(size.Width * size.Height)/ OriginalArea));
+            density *= satCountOriginal;
+            int satCount = (int)density;
+            cc.satcount.Text = satCount.ToString();
             //ClusterRadius = (size.Width * size.Height) / 9000;
             for (int i = 0; i < sats.Count; i++)
             {
@@ -298,6 +305,8 @@ namespace WindowsFormsApplication2
         int parentIndex = -1;
         private void Form1_MouseDown(object sender, MouseEventArgs e)
         {
+            if (!t.Enabled)
+                return;
             //Graphics graphObj = this.CreateGraphics();
             MoveTo = new Point(e.X, e.Y);
 
@@ -369,6 +378,11 @@ namespace WindowsFormsApplication2
             parentIndex = -1;
             //Prev
 
+        }
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            
         }
 
     }

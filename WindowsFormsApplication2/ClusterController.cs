@@ -36,7 +36,7 @@ namespace WindowsFormsApplication2
             main.clusterCount = Convert.ToInt32(clusterCount.Text);
             main.ClusterRadius = Convert.ToInt32(clusterRadius.Text);
             main.parentCount = Convert.ToInt32(parentCount.Text);
-            main.satCount = Convert.ToInt32(satcount.Text);
+            main.satCountOriginal = Convert.ToInt32(satcount.Text);
             main.button1_Click(sender, e);
         }
 
