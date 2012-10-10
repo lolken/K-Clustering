@@ -18,6 +18,7 @@ namespace WindowsFormsApplication2
         public int parentCount = 50;
         public int interval = (int)(1000.0 / 60.0);
         public int clusterCount = 300;
+        public int satCount = 50;
         public int satCountOriginal = 50;
         public int Scale = 1;
         double OriginalArea = -1;
@@ -52,7 +53,8 @@ namespace WindowsFormsApplication2
             icon = Icon.FromHandle(bmp.GetHicon());
             cc = new ClusterController(this);
             cc.Show(this);
-            
+            satCountOriginal = satCount;
+
         }
 
         void FrameRater_Tick(object sender, EventArgs e)
@@ -163,6 +165,12 @@ namespace WindowsFormsApplication2
             return new Point((int)Points.Average(pnt => pnt.X), (int)Points.Average(pnt => pnt.Y));
         }
 
+        bool ParentsContainsGUID(int key)
+        {
+            Kluster k = parents.Find(p => { return p.ID == key; });
+            return k != null;
+        }
+
         public double getDistance(Point parent, Point sat)
         {
             return Math.Sqrt(Math.Pow(sat.X - parent.X, 2) + Math.Pow(sat.Y - parent.Y, 2));
@@ -181,21 +189,23 @@ namespace WindowsFormsApplication2
                 sats.Add(new List<Point>());
 
             Size size = this.Size;
-            
-            Point random = new Point(-1000,-1000);
+
+            Point random = new Point(-1000, -1000);
             for (int i = 0; i < parentCount; i++)
             {
                 random = new Point(-1000, -1000);
+
                 while (random.X > size.Width - 10 || random.X < 0 || random.Y > size.Height - 10 || random.Y < 0)
                     random = new Point((int)(GetRandomPercentage() * Size.Width), (int)(GetRandomPercentage() * Size.Height));
-                parents.Add(new Kluster(random,String.Format("Kluster{0}",i)));
+
+                parents.Add(new Kluster(random, GetAvailableGUID()));
             }
 
-            random = new Point(-1000,-1000);
-            Point RandomClusterPoint = new Point(-1000,-1000);
-            double density = Math.Sqrt(((double)(size.Width * size.Height)/ OriginalArea));
+            random = new Point(-1000, -1000);
+            Point RandomClusterPoint = new Point(-1000, -1000);
+            double density = Math.Sqrt(((double)(size.Width * size.Height) / OriginalArea));
             density *= satCountOriginal;
-            int satCount = (int)density;
+            satCount = (int)density;
             cc.satcount.Text = satCount.ToString();
             //ClusterRadius = (size.Width * size.Height) / 9000;
             for (int i = 0; i < sats.Count; i++)
@@ -212,19 +222,15 @@ namespace WindowsFormsApplication2
                     sats[i].Add(RandomClusterPoint);
                 }
             }
-
-            //clusterCount = parentCount;
         }
 
-        //List<Color> colors = new List<Color>() { Color.Red, Color.Blue, Color.Green, Color.Black, Color.Pink };
 
         double GetRandomPercentage()
         {
             return rand.Next(0, 100000) / 100000.0;
         }
 
-        List<Color> ColorsExample = new List<Color>();
-
+        Dictionary<int, Color> ColorLookup = new Dictionary<int, Color>();
         private void Form1_Paint(object sender, PaintEventArgs e)
         {
             System.Drawing.Graphics graphicsObj;
@@ -238,9 +244,14 @@ namespace WindowsFormsApplication2
             {
                 for (int i = 0; i < sats.Count; i++)
                 {
-                    if (ColorsExample.Count <= i)
-                        ColorsExample.Add(Color.FromArgb((int)(GetRandomPercentage() * 255), (int)(GetRandomPercentage() * 255), (int)(GetRandomPercentage() * 255)));
-                    myPen = new Pen(Color.FromArgb(255, ColorsExample[i]), 5);
+                    if (i < parents.Count)
+                    {
+                        if (!ColorLookup.ContainsKey(parents[i].ID))
+                            ColorLookup.Add(parents[i].ID, GetRandomColor());
+                        myPen = new Pen(Color.FromArgb(255, ColorLookup[parents[i].ID]), 5);
+                    }
+                    else
+                        myPen = new Pen(GetRandomColor(), 5);
 
                     if (sats[i].Count > 0)
                     {
@@ -253,8 +264,8 @@ namespace WindowsFormsApplication2
 
             for (int i = 0; i < parentCount; i++)
             {
-                if (ColorsExample.Count <= i)
-                    ColorsExample.Add(Color.FromArgb((int)(GetRandomPercentage() * 255), (int)(GetRandomPercentage() * 255), (int)(GetRandomPercentage() * 255)));
+                if (!ColorLookup.ContainsKey(parents[i].ID))
+                    ColorLookup.Add(parents[i].ID, GetRandomColor());
                 if (i != parentIndex)
                     graphicsObj.DrawIcon(icon, new Rectangle(parents[i].X - 25, parents[i].Y - 25, 50, 50));
                 else
@@ -303,6 +314,19 @@ namespace WindowsFormsApplication2
         Point MoveTo = new Point(0, 0);
         Point Prev = new Point(0, 0);
         int parentIndex = -1;
+
+        int GetAvailableGUID()
+        {
+
+            int GUID = rand.Next(0, 100);
+            while (ParentsContainsGUID(GUID))
+                GUID = GetAvailableGUID();
+
+            return GUID;
+        }
+
+        Color GetRandomColor() { return Color.FromArgb((int)(GetRandomPercentage() * 255), (int)(GetRandomPercentage() * 255), (int)(GetRandomPercentage() * 255)); }
+
         private void Form1_MouseDown(object sender, MouseEventArgs e)
         {
             if (!t.Enabled)
@@ -328,17 +352,23 @@ namespace WindowsFormsApplication2
 
                 if (ModifierKeys == Keys.Control)
                 {
-                    if (min < 50)
+                    if (min < 25)
                     {
-                        parents.RemoveAt(parentIndex);
-                        parentsPrev.RemoveAt(parentIndex);
-                        parentCount -= 1;
+                        if (parents.Count > 1)
+                        {
+                            ColorLookup.Remove(parents[parentIndex].ID);
+                            parents.RemoveAt(parentIndex);
+                            parentsPrev.RemoveAt(parentIndex);
+                            parentCount -= 1;
+
+                        }
                     }
                     else
                     {
-                        parents.Add(new Kluster(new Point(MoveTo.X, MoveTo.Y), String.Format("Kluster{0}", parentIndex)));
-                        parentsPrev.Add(new Kluster(new Point(MoveTo.X, MoveTo.Y), String.Format("Kluster{0}", parentIndex)));
+                        parents.Add(new Kluster(new Point(MoveTo.X, MoveTo.Y), GetAvailableGUID()));
+                        parentsPrev.Add(new Kluster(new Point(MoveTo.X, MoveTo.Y), GetAvailableGUID()));
                         parentCount += 1;
+                        ColorLookup.Add(parents[parents.Count - 1].ID, GetRandomColor());
                     }
                     cc.parentCount.Text = parentCount.ToString();
                 }
@@ -363,13 +393,10 @@ namespace WindowsFormsApplication2
                     if (parentIndex == i)
                     {
                         parents[i].Location = new Point(parents[i].X + (MoveTo.X - Prev.X), parents[i].Y + (MoveTo.Y - Prev.Y));
-                        //parents[i] = ;
-                        //parents[i] = new Point(MoveTo.X, MoveTo.Y);
                         break;
                     }
                 }
                 Prev = MoveTo;
-                //this.Refresh();
             }
         }
 
@@ -377,26 +404,24 @@ namespace WindowsFormsApplication2
         {
             moused = false;
             parentIndex = -1;
-            //Prev
-
         }
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            
+
         }
 
     }
 
     public class Kluster
     {
-        string lbl = "";
+        int guid = -1;
         Point location = new Point(0, 0);
         //private Kluster pnt;
-        public Kluster(Point pnt, string label)
+        public Kluster(Point pnt, int GUID)
         {
             location = new Point(pnt.X, pnt.Y);
-            lbl = label;
+            ID = GUID;
         }
 
         public Kluster(Kluster pnt)
@@ -405,11 +430,11 @@ namespace WindowsFormsApplication2
             ID = pnt.ID;
         }
 
-        public string ID { get { return lbl; } set { lbl = value; } }
+        public int ID { get { return guid; } set { guid = value; } }
         public Point Location { get { return location; } set { location = new Point(value.X, value.Y); } }
         public int X { get { return location.X; } set { location.X = value; } }
         public int Y { get { return location.Y; } set { location.Y = value; } }
     }
-    
+
 
 }
