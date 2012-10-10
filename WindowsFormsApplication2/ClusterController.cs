@@ -16,11 +16,13 @@ namespace WindowsFormsApplication2
         {
             main = mainForm;
             InitializeComponent();
+            trackBar1_Scroll(this, new EventArgs());
         }
 
         private void ClusterController_FormClosing(object sender, FormClosingEventArgs e)
         {
-            e.Cancel = true;
+            if (e.CloseReason != CloseReason.FormOwnerClosing)
+                main.Close();
         }
 
         private void startBut_Click(object sender, EventArgs e)
@@ -36,6 +38,23 @@ namespace WindowsFormsApplication2
             main.parentCount = Convert.ToInt32(parentCount.Text);
             main.satCount = Convert.ToInt32(satcount.Text);
             main.button1_Click(sender, e);
+        }
+
+        private void ClusterController_Load(object sender, EventArgs e)
+        {
+            button1_Click(sender, e);
+        }
+
+        private void trackBar1_Scroll(object sender, EventArgs e)
+        {
+            //main.Scale = trackBar1.Value;
+            main.updateClock(trackBar1.Value);
+            main.Refresh();
+        }
+
+        private void radioButton2_CheckedChanged(object sender, EventArgs e)
+        {
+            main.Quality = radioButton2.Checked;
         }
     }
 }

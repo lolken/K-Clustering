@@ -6,28 +6,32 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using System.Reflection;
 
 namespace WindowsFormsApplication2
 {
     public partial class Form1 : Form
     {
+        #region Control Variables
+
+        public int ClusterRadius = 100;
+        public int parentCount = 50;
+        public int interval = (int)(1000.0 / 15.0);
+        public int clusterCount = 300;
+        public int satCount = 50;
+        public int Scale = 1;
+
+
+        #endregion Control Variables
+
         #region Members
         List<Point> parents = new List<Point>();
         List<Point> parentsPrev = new List<Point>();
         List<List<Point>> sats = new List<List<Point>>();
         Random rand = new Random();
-        #region Control Variables
-
-        public int ClusterRadius = 100;
-        public int parentCount = 50;
-        public int interval = (int)(1000.0 / 10.0);
-        public int clusterCount = 300;
-        public int satCount = 50;
-
-        #endregion Control Variables
-
+        Timer FrameRater = new Timer();
         #endregion Members
-
+        Icon icon;
         public Form1()
         {
             InitializeComponent();
@@ -36,14 +40,54 @@ namespace WindowsFormsApplication2
 
             t.Tick += new EventHandler(t_Tick);
 
+            FrameRater.Tick += FrameRater_Tick;
+            FrameRater.Interval = 1000;
+            this.DoubleBuffered = true;
             makeboard();
 
+            Bitmap bmp = new Bitmap(@"C:\Users\gabe.3DLMINDEN\Documents\GitHub\K-Clustering\WindowsFormsApplication2\Resources\target.png");
+            icon = Icon.FromHandle(bmp.GetHicon());
+
             cc = new ClusterController(this);
-            cc.Show();
+            cc.Show(this);
         }
+
+        void FrameRater_Tick(object sender, EventArgs e)
+        {
+            cc.fpslabel.Text = frames.ToString();
+            frames = 0;
+        }
+
         ClusterController cc;
+        int frames = 0;
+
+        public void updateClock(int scale)
+        {
+            double val = 1;
+            switch (scale)
+            {
+                case 1:
+                    val = 5;
+                    break;
+                case 2:
+                    val = 15;
+                    break;
+                case 3:
+                    val = 30;
+                    break;
+
+            }
+            bool old = t.Enabled;
+
+            if (old)
+                t.Stop();
+            t.Interval = (int)(1000.0 / val);
+            if (old)
+                t.Start();
+        }
         void t_Tick(object sender, EventArgs e)
         {
+            frames += 1;
             List<Point> tempsat = new List<Point>();
 
             for (int i = 0; i < sats.Count; i++)
@@ -76,10 +120,10 @@ namespace WindowsFormsApplication2
             for (int i = 0; i < parentCount; i++)
             {
                 Point p = getAvgPoint(sats[i]);
-                if(p.X != -1000 && p.Y != -1000)
+                if (p.X != -1000 && p.Y != -1000)
                     parents[i] = p;
             }
-            
+
 
             bool same = true;
             if (parentsPrev.Count > 0)
@@ -95,9 +139,12 @@ namespace WindowsFormsApplication2
             {
                 t.Enabled = false;
                 cc.startBut.Text = t.Enabled ? "Stop" : "Start";
+                Converged = true;
             }
             else
-                parentsPrev = new List<Point>(parents);
+                Converged = false;
+
+            parentsPrev = new List<Point>(parents);
 
             Invalidate();
         }
@@ -122,6 +169,8 @@ namespace WindowsFormsApplication2
 
             parents.Clear();
             sats.Clear();
+            parentsPrev.Clear();
+            ColorsExample.Clear();
             for (int i = 0; i < clusterCount; i++)
                 sats.Add(new List<Point>());
 
@@ -154,20 +203,13 @@ namespace WindowsFormsApplication2
 
         private void Form1_Paint(object sender, PaintEventArgs e)
         {
+
             System.Drawing.Graphics graphicsObj;
 
             graphicsObj = e.Graphics;
-
-            graphicsObj.Clear(Color.Black);
+            graphicsObj.Clear(Color.FromArgb(25, 25, 25));
 
             Pen myPen = new Pen(System.Drawing.Color.Green, 5);
-
-            for (int i = 0; i < parentCount; i++)
-            {
-                if (ColorsExample.Count <= i)
-                    ColorsExample.Add(Color.FromArgb((int)(GetRandomPercentage() * 255), (int)(GetRandomPercentage() * 255), (int)(GetRandomPercentage() * 255)));
-                graphicsObj.DrawEllipse(new Pen(ColorsExample[i], 5), new Rectangle(parents[i].X - 10, parents[i].Y - 10, 20, 20));
-            }
 
             if (sats.Count > 0)
             {
@@ -175,16 +217,27 @@ namespace WindowsFormsApplication2
                 {
                     if (ColorsExample.Count <= i)
                         ColorsExample.Add(Color.FromArgb((int)(GetRandomPercentage() * 255), (int)(GetRandomPercentage() * 255), (int)(GetRandomPercentage() * 255)));
-                    myPen = new Pen(ColorsExample[i], 5);
+                    myPen = new Pen(Color.FromArgb(225, ColorsExample[i]), 5);
 
                     if (sats[i].Count > 0)
                     {
                         foreach (Point pnt in sats[i])
-                            graphicsObj.DrawEllipse(myPen, new Rectangle(pnt.X, pnt.Y, 2, 2));
+                            graphicsObj.DrawEllipse(myPen, new Rectangle(pnt.X, pnt.Y, 2 * Scale, 2 * Scale));
                     }
 
                 }
             }
+            for (int i = 0; i < parentCount; i++)
+            {
+                if (ColorsExample.Count <= i)
+                    ColorsExample.Add(Color.FromArgb((int)(GetRandomPercentage() * 255), (int)(GetRandomPercentage() * 255), (int)(GetRandomPercentage() * 255)));
+                graphicsObj.DrawIcon(icon, new Rectangle(parents[i].X - 25, parents[i].Y - 25, 50, 50));
+            }
+
+            if (!Quality)
+                graphicsObj.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighSpeed;
+            else
+                graphicsObj.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
         }
 
         public void button1_Click(object sender, EventArgs e)
@@ -200,9 +253,21 @@ namespace WindowsFormsApplication2
         public void startBut_Click(object sender, EventArgs e)
         {
             if (!t.Enabled)
+            {
+                if (Converged)
+                    makeboard();
+                FrameRater.Start();
                 t.Start();
+            }
             else
+            {
+                FrameRater.Stop();
                 t.Stop();
+            }
         }
+        bool quality = true;
+        public bool Quality { get { return quality; } set { quality = value; } }
+        bool converged = false;
+        public bool Converged { get { return converged; } set { converged = value; } }
     }
 }
