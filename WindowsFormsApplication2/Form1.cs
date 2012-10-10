@@ -46,7 +46,7 @@ namespace WindowsFormsApplication2
             this.DoubleBuffered = true;
             makeboard();
 
-            Bitmap bmp = new Bitmap(@"C:\Users\gabe.3DLMINDEN\Documents\GitHub\K-Clustering\WindowsFormsApplication2\Resources\target.png");
+            Bitmap bmp = new Bitmap(kMeans.Properties.Resources.target);
             icon = Icon.FromHandle(bmp.GetHicon());
 
             cc = new ClusterController(this);

@@ -97,7 +97,7 @@
             this.parentCount.Name = "parentCount";
             this.parentCount.Size = new System.Drawing.Size(100, 20);
             this.parentCount.TabIndex = 6;
-            this.parentCount.Text = "10";
+            this.parentCount.Text = "2";
             this.parentCount.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             // 
             // satcount
@@ -107,7 +107,7 @@
             this.satcount.Name = "satcount";
             this.satcount.Size = new System.Drawing.Size(100, 20);
             this.satcount.TabIndex = 7;
-            this.satcount.Text = "130";
+            this.satcount.Text = "100";
             this.satcount.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             // 
             // label1
