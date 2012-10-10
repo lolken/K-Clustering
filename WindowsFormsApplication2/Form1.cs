@@ -16,7 +16,7 @@ namespace WindowsFormsApplication2
 
         public int ClusterRadius = 100;
         public int parentCount = 50;
-        public int interval = (int)(1000.0 / 15.0);
+        public int interval = (int)(1000.0 / 60.0);
         public int clusterCount = 300;
         public int satCount = 50;
         public int Scale = 1;
@@ -67,13 +67,13 @@ namespace WindowsFormsApplication2
             switch (scale)
             {
                 case 1:
-                    val = 5;
-                    break;
-                case 2:
                     val = 15;
                     break;
+                case 2:
+                    val = 2;
+                    break;
                 case 3:
-                    val = 30;
+                    val = 15;
                     break;
 
             }
@@ -115,14 +115,17 @@ namespace WindowsFormsApplication2
                     }
                 }
                 sats[index].Add(new Point(tempsat[i].X, tempsat[i].Y));
+                //this.Refresh();
             }
 
             for (int i = 0; i < parentCount; i++)
             {
                 Point p = getAvgPoint(sats[i]);
                 if (p.X != -1000 && p.Y != -1000)
-                    parents[i] = p;
+                    if (i != parentIndex)
+                        parents[i] = p;
             }
+
 
 
             bool same = true;
@@ -137,7 +140,7 @@ namespace WindowsFormsApplication2
 
             if (same)
             {
-                t.Enabled = false;
+                //t.Enabled = false;
                 cc.startBut.Text = t.Enabled ? "Stop" : "Start";
                 Converged = true;
             }
@@ -203,7 +206,6 @@ namespace WindowsFormsApplication2
 
         private void Form1_Paint(object sender, PaintEventArgs e)
         {
-
             System.Drawing.Graphics graphicsObj;
 
             graphicsObj = e.Graphics;
@@ -217,7 +219,7 @@ namespace WindowsFormsApplication2
                 {
                     if (ColorsExample.Count <= i)
                         ColorsExample.Add(Color.FromArgb((int)(GetRandomPercentage() * 255), (int)(GetRandomPercentage() * 255), (int)(GetRandomPercentage() * 255)));
-                    myPen = new Pen(Color.FromArgb(225, ColorsExample[i]), 5);
+                    myPen = new Pen(Color.FromArgb(255, ColorsExample[i]), 5);
 
                     if (sats[i].Count > 0)
                     {
@@ -227,11 +229,15 @@ namespace WindowsFormsApplication2
 
                 }
             }
+
             for (int i = 0; i < parentCount; i++)
             {
                 if (ColorsExample.Count <= i)
                     ColorsExample.Add(Color.FromArgb((int)(GetRandomPercentage() * 255), (int)(GetRandomPercentage() * 255), (int)(GetRandomPercentage() * 255)));
-                graphicsObj.DrawIcon(icon, new Rectangle(parents[i].X - 25, parents[i].Y - 25, 50, 50));
+                if (i != parentIndex)
+                    graphicsObj.DrawIcon(icon, new Rectangle(parents[i].X - 25, parents[i].Y - 25, 50, 50));
+                else
+                    graphicsObj.DrawIcon(icon, new Rectangle(parents[i].X - 40, parents[i].Y - 40, 80, 80));
             }
 
             if (!Quality)
@@ -243,6 +249,7 @@ namespace WindowsFormsApplication2
         public void button1_Click(object sender, EventArgs e)
         {
             t.Enabled = false;
+            Converged = false;
             cc.startBut.Text = t.Enabled ? "Stop" : "Start";
             makeboard();
             Refresh();
@@ -261,13 +268,74 @@ namespace WindowsFormsApplication2
             }
             else
             {
-                FrameRater.Stop();
-                t.Stop();
+                //FrameRater.Stop();
+                //t.Stop();
             }
         }
         bool quality = true;
         public bool Quality { get { return quality; } set { quality = value; } }
         bool converged = false;
         public bool Converged { get { return converged; } set { converged = value; } }
+
+        bool moused = false;
+        Point ClusterParent = new Point(0, 0);
+        Point MoveTo = new Point(0, 0);
+        Point Prev = new Point(0, 0);
+        int parentIndex = -1;
+        private void Form1_MouseDown(object sender, MouseEventArgs e)
+        {
+            //Graphics graphObj = this.CreateGraphics();
+            MoveTo = new Point(e.X, e.Y);
+            if (e.Button == System.Windows.Forms.MouseButtons.Left)
+            {
+                int min = int.MaxValue;
+                double distance = 0;
+                parents.ForEach(pnt =>
+                {
+                    distance = getDistance(pnt, MoveTo);
+                    if (distance < min)
+                    {
+                        min = (int)distance;
+                        ClusterParent = new Point(pnt.X, pnt.Y);
+                    }
+                });
+
+                if (min < 400)
+                {
+                    moused = true;
+                    Prev = MoveTo;
+                    parentIndex = parents.IndexOf(ClusterParent);
+                }
+
+            }
+        }
+
+        private void Form1_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (moused)
+            {
+                MoveTo = new Point(e.X, e.Y);
+                for (int i = 0; i < parents.Count; i++)
+                {
+                    if (parentIndex == i)
+                    {
+                        parents[i] = new Point(parents[i].X + (MoveTo.X - Prev.X), parents[i].Y + (MoveTo.Y - Prev.Y));
+                        //parents[i] = new Point(MoveTo.X, MoveTo.Y);
+                        break;
+                    }
+                }
+                Prev = MoveTo;
+                //this.Refresh();
+            }
+        }
+
+        private void Form1_MouseUp(object sender, MouseEventArgs e)
+        {
+            moused = false;
+            parentIndex = -1;
+            //Prev
+
+        }
+
     }
 }

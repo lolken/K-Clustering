@@ -48,7 +48,7 @@ namespace WindowsFormsApplication2
         private void trackBar1_Scroll(object sender, EventArgs e)
         {
             //main.Scale = trackBar1.Value;
-            main.updateClock(trackBar1.Value);
+            //main.updateClock(trackBar1.Value);
             main.Refresh();
         }
 
