@@ -21,12 +21,13 @@ namespace WindowsFormsApplication2
         public int satCount = 50;
         public int Scale = 1;
 
+        //Dictionary<int, Color> ClusterColors = new Dictionary<int, Color>();
 
         #endregion Control Variables
 
         #region Members
-        List<Point> parents = new List<Point>();
-        List<Point> parentsPrev = new List<Point>();
+        List<Kluster> parents = new List<Kluster>();
+        List<Kluster> parentsPrev = new List<Kluster>();
         List<List<Point>> sats = new List<List<Point>>();
         Random rand = new Random();
         Timer FrameRater = new Timer();
@@ -105,9 +106,9 @@ namespace WindowsFormsApplication2
             {
                 min = double.MaxValue;
                 index = -1;
-                for (int j = 0; j < parentCount; j++)
+                for (int j = 0; j < parents.Count; j++)
                 {
-                    distance = getDistance(parents[j], tempsat[i]);
+                    distance = getDistance(parents[j].Location, tempsat[i]);
                     if (distance < min)
                     {
                         min = distance;
@@ -118,12 +119,12 @@ namespace WindowsFormsApplication2
                 //this.Refresh();
             }
 
-            for (int i = 0; i < parentCount; i++)
+            for (int i = 0; i < parents.Count; i++)
             {
                 Point p = getAvgPoint(sats[i]);
                 if (p.X != -1000 && p.Y != -1000)
                     if (i != parentIndex)
-                        parents[i] = p;
+                        parents[i].Location = p;
             }
 
 
@@ -131,8 +132,8 @@ namespace WindowsFormsApplication2
             bool same = true;
             if (parentsPrev.Count > 0)
             {
-                for (int i = 0; i < parentCount; i++)
-                    same &= parents[i] == parentsPrev[i];
+                for (int i = 0; i < parents.Count; i++)
+                    same &= parents[i].Location == parentsPrev[i].Location;
 
             }
             else
@@ -147,7 +148,7 @@ namespace WindowsFormsApplication2
             else
                 Converged = false;
 
-            parentsPrev = new List<Point>(parents);
+            parentsPrev = new List<Kluster>(parents);
 
             Invalidate();
         }
@@ -178,24 +179,37 @@ namespace WindowsFormsApplication2
                 sats.Add(new List<Point>());
 
             Size size = this.Size;
+            Point random = new Point(-1000,-1000);
             for (int i = 0; i < parentCount; i++)
             {
-                parents.Add(new Point((int)(GetRandomPercentage() * Size.Width), (int)(GetRandomPercentage() * Size.Height)));
+                random = new Point(-1000, -1000);
+                while (random.X > size.Width - 10 || random.X < 0 || random.Y > size.Height - 10 || random.Y < 0)
+                    random = new Point((int)(GetRandomPercentage() * Size.Width), (int)(GetRandomPercentage() * Size.Height));
+                parents.Add(new Kluster(random,String.Format("Kluster{0}",i)));
             }
 
-            Point randomPoint = new Point();
+            random = new Point(-1000,-1000);
+            Point RandomClusterPoint = new Point(-1000,-1000);
             //ClusterRadius = (size.Width * size.Height) / 9000;
             for (int i = 0; i < sats.Count; i++)
             {
-                randomPoint = new Point((int)(GetRandomPercentage() * Size.Width), (int)(GetRandomPercentage() * Size.Height));
+                random = new Point(-1000, -1000);
+
+                while (random.X > size.Width - 10 || random.X < 0 || random.Y > size.Height - 10 || random.Y < 0)
+                    random = new Point((int)(GetRandomPercentage() * Size.Width), (int)(GetRandomPercentage() * Size.Height));
                 for (int j = 0; j < satCount; j++)
-                    sats[i].Add(new Point((int)(randomPoint.X + Math.Cos(2 * Math.PI * GetRandomPercentage()) * GetRandomPercentage() * ClusterRadius), (int)(randomPoint.Y + Math.Sin(2 * Math.PI * GetRandomPercentage()) * GetRandomPercentage() * ClusterRadius)));
+                {
+                    RandomClusterPoint = new Point(-1000, -1000);
+                    while (RandomClusterPoint.X > size.Width - 10 || RandomClusterPoint.X < 0 || RandomClusterPoint.Y > size.Height - 10 || RandomClusterPoint.Y < 0)
+                        RandomClusterPoint = new Point((int)(random.X + Math.Cos(2 * Math.PI * GetRandomPercentage()) * GetRandomPercentage() * ClusterRadius), (int)(random.Y + Math.Sin(2 * Math.PI * GetRandomPercentage()) * GetRandomPercentage() * ClusterRadius));
+                    sats[i].Add(RandomClusterPoint);
+                }
             }
 
             //clusterCount = parentCount;
         }
 
-        List<Color> colors = new List<Color>() { Color.Red, Color.Blue, Color.Green, Color.Black, Color.Pink };
+        //List<Color> colors = new List<Color>() { Color.Red, Color.Blue, Color.Green, Color.Black, Color.Pink };
 
         double GetRandomPercentage()
         {
@@ -278,7 +292,7 @@ namespace WindowsFormsApplication2
         public bool Converged { get { return converged; } set { converged = value; } }
 
         bool moused = false;
-        Point ClusterParent = new Point(0, 0);
+        Point ClusterParent;
         Point MoveTo = new Point(0, 0);
         Point Prev = new Point(0, 0);
         int parentIndex = -1;
@@ -286,13 +300,14 @@ namespace WindowsFormsApplication2
         {
             //Graphics graphObj = this.CreateGraphics();
             MoveTo = new Point(e.X, e.Y);
+
             if (e.Button == System.Windows.Forms.MouseButtons.Left)
             {
                 int min = int.MaxValue;
                 double distance = 0;
                 parents.ForEach(pnt =>
                 {
-                    distance = getDistance(pnt, MoveTo);
+                    distance = getDistance(pnt.Location, MoveTo);
                     if (distance < min)
                     {
                         min = (int)distance;
@@ -300,13 +315,31 @@ namespace WindowsFormsApplication2
                     }
                 });
 
-                if (min < 400)
-                {
-                    moused = true;
-                    Prev = MoveTo;
-                    parentIndex = parents.IndexOf(ClusterParent);
-                }
+                parentIndex = parents.FindIndex(pnt => { return pnt.Location == ClusterParent; });
 
+                if (ModifierKeys == Keys.Control)
+                {
+                    if (min < 50)
+                    {
+                        parents.RemoveAt(parentIndex);
+                        parentsPrev.RemoveAt(parentIndex);
+                        parentCount -= 1;
+                    }
+                    else
+                    {
+                        parents.Add(new Kluster(new Point(MoveTo.X, MoveTo.Y), String.Format("Kluster{0}", parentIndex)));
+                        parentsPrev.Add(new Kluster(new Point(MoveTo.X, MoveTo.Y), String.Format("Kluster{0}", parentIndex)));
+                        parentCount += 1;
+                    }
+                }
+                else
+                {
+                    if (min < 400)
+                    {
+                        moused = true;
+                        Prev = MoveTo;
+                    }
+                }
             }
         }
 
@@ -319,7 +352,8 @@ namespace WindowsFormsApplication2
                 {
                     if (parentIndex == i)
                     {
-                        parents[i] = new Point(parents[i].X + (MoveTo.X - Prev.X), parents[i].Y + (MoveTo.Y - Prev.Y));
+                        parents[i].Location = new Point(parents[i].X + (MoveTo.X - Prev.X), parents[i].Y + (MoveTo.Y - Prev.Y));
+                        //parents[i] = ;
                         //parents[i] = new Point(MoveTo.X, MoveTo.Y);
                         break;
                     }
@@ -338,4 +372,29 @@ namespace WindowsFormsApplication2
         }
 
     }
+
+    public class Kluster
+    {
+        string lbl = "";
+        Point location = new Point(0, 0);
+        //private Kluster pnt;
+        public Kluster(Point pnt, string label)
+        {
+            location = new Point(pnt.X, pnt.Y);
+            lbl = label;
+        }
+
+        public Kluster(Kluster pnt)
+        {
+            location = new Point(pnt.X, pnt.Y);
+            ID = pnt.ID;
+        }
+
+        public string ID { get { return lbl; } set { lbl = value; } }
+        public Point Location { get { return location; } set { location = new Point(value.X, value.Y); } }
+        public int X { get { return location.X; } set { location.X = value; } }
+        public int Y { get { return location.Y; } set { location.Y = value; } }
+    }
+    
+
 }

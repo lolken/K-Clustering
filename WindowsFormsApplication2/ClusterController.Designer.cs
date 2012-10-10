@@ -72,6 +72,7 @@
             // 
             // clusterCount
             // 
+            this.clusterCount.Enabled = false;
             this.clusterCount.Location = new System.Drawing.Point(8, 25);
             this.clusterCount.Name = "clusterCount";
             this.clusterCount.Size = new System.Drawing.Size(100, 20);
@@ -81,6 +82,7 @@
             // 
             // clusterRadius
             // 
+            this.clusterRadius.Enabled = false;
             this.clusterRadius.Location = new System.Drawing.Point(8, 97);
             this.clusterRadius.Name = "clusterRadius";
             this.clusterRadius.Size = new System.Drawing.Size(100, 20);
@@ -90,6 +92,7 @@
             // 
             // parentCount
             // 
+            this.parentCount.Enabled = false;
             this.parentCount.Location = new System.Drawing.Point(8, 61);
             this.parentCount.Name = "parentCount";
             this.parentCount.Size = new System.Drawing.Size(100, 20);
@@ -99,11 +102,12 @@
             // 
             // satcount
             // 
+            this.satcount.Enabled = false;
             this.satcount.Location = new System.Drawing.Point(8, 136);
             this.satcount.Name = "satcount";
             this.satcount.Size = new System.Drawing.Size(100, 20);
             this.satcount.TabIndex = 7;
-            this.satcount.Text = "100";
+            this.satcount.Text = "130";
             this.satcount.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             // 
             // label1
@@ -144,6 +148,7 @@
             // 
             // trackBar1
             // 
+            this.trackBar1.Enabled = false;
             this.trackBar1.LargeChange = 1;
             this.trackBar1.Location = new System.Drawing.Point(8, 230);
             this.trackBar1.Maximum = 3;
@@ -166,6 +171,7 @@
             // radioButton1
             // 
             this.radioButton1.AutoSize = true;
+            this.radioButton1.Enabled = false;
             this.radioButton1.Location = new System.Drawing.Point(24, 185);
             this.radioButton1.Name = "radioButton1";
             this.radioButton1.Size = new System.Drawing.Size(82, 17);
@@ -178,6 +184,7 @@
             // 
             this.radioButton2.AutoSize = true;
             this.radioButton2.Checked = true;
+            this.radioButton2.Enabled = false;
             this.radioButton2.Location = new System.Drawing.Point(24, 162);
             this.radioButton2.Name = "radioButton2";
             this.radioButton2.Size = new System.Drawing.Size(81, 17);
