@@ -80,15 +80,22 @@ namespace WindowsFormsApplication2
             OriginalArea = this.Size.Width * this.Size.Height;
             //makeboard();
 
-            Bitmap bmp = new Bitmap(kMeans.Properties.Resources.eye2);
+            //Bitmap bmp = new Bitmap(kMeans.Properties.Resources.eye2);
+
+            Bitmap bmp = new Bitmap(kMeans.Properties.Resources.nipple);
+
             icon = Icon.FromHandle(bmp.GetHicon());
-            bmp = new Bitmap(kMeans.Properties.Resources.eye1);
+
+            //bmp = new Bitmap(kMeans.Properties.Resources.eye1);
+
+            bmp = new Bitmap(kMeans.Properties.Resources.nipple);
+
             Dead = Icon.FromHandle(bmp.GetHicon());
             bmp = new Bitmap(kMeans.Properties.Resources.target);
             target = Icon.FromHandle(bmp.GetHicon());
 
             cc = new ClusterController(this);
-            cc.Show(this);
+            cc.Show();
             satCountOriginal = satCount;
 
         }
@@ -101,30 +108,6 @@ namespace WindowsFormsApplication2
 
         List<Point> Negras = new List<Point>();
 
-        public void updateClock(int scale)
-        {
-            double val = 1;
-            switch (scale)
-            {
-                case 1:
-                    val = 15;
-                    break;
-                case 2:
-                    val = 2;
-                    break;
-                case 3:
-                    val = 15;
-                    break;
-
-            }
-            bool old = t.Enabled;
-
-            if (old)
-                t.Stop();
-            t.Interval = (int)(1000.0 / val);
-            if (old)
-                t.Start();
-        }
         void t_Tick(object sender, EventArgs e)
         {
             frames += 1;
@@ -157,18 +140,6 @@ namespace WindowsFormsApplication2
                 sats[index].Add(new Point(tempsat[i].X, tempsat[i].Y));
                 //this.Refresh();
             }
-
-            Negras.Clear();
-
-            List<Convex.Point> perimeterPoints = new List<Convex.Point>();
-            List<Convex.Point> xys = new List<Convex.Point>();
-            sats.ForEach(sat =>
-                {
-                    xys.Clear();
-                    sat.ForEach(s => { xys.Add(new Convex.Point(s.X, s.Y)); });
-                    perimeterPoints = Convex.Convexhull.convexhull(xys.ToArray()).ToList();
-                    perimeterPoints.ForEach(pnt => { Negras.Add(new Point((int)pnt.x, (int)pnt.y)); });
-                });
 
             for (int i = 0; i < parents.Count; i++)
             {
@@ -223,7 +194,7 @@ namespace WindowsFormsApplication2
             return Math.Sqrt(Math.Pow(sat.X - parent.X, 2) + Math.Pow(sat.Y - parent.Y, 2));
         }
 
-        private void makeboard()
+        public void makeboard()
         {
             // assign parents some xy points
             // fill the satellites with xy points
@@ -252,12 +223,12 @@ namespace WindowsFormsApplication2
 
 
 
-            random = new Point(-1000, -1000);
+            //random = new Point(-1000, -1000);
             Point RandomClusterPoint = new Point(-1000, -1000);
-            double density = Math.Sqrt(((double)(size.Width * size.Height) / OriginalArea));
-            density *= satCountOriginal;
-            satCount = (int)density;
-            cc.satcount.Text = satCount.ToString();
+            //double density = Math.Sqrt(((double)(size.Width * size.Height) / OriginalArea));
+            //density *= satCountOriginal;
+            //satCount = (int)density;
+            //cc.satcount.Text = satCount.ToString();
             //ClusterRadius = (size.Width * size.Height) / 9000;
             if (DEMO_MODE)
             {
@@ -284,14 +255,11 @@ namespace WindowsFormsApplication2
                 double width = this.Width;
                 double height = this.Height;
 
-                //double DensityXFull = width / 10.0;
-               // double DensityYFull = height / 10.0;
-
                 double scaleScreenX = width / rangeX;
                 double scaleScreenY = height / rangeY;
 
-                double gridResolutionX = width / (10.0 - 5 * (1-scaleScreenX));
-                double gridResolutionY = height / (10.0 - 5 * (1-scaleScreenY));
+                double gridResolutionX = width / (Scale *10.0 - 4 * (1 - scaleScreenX));
+                double gridResolutionY = height / (Scale * 10.0 - 4 * (1 - scaleScreenY));
                 double x = 0; double y = 0;
 
                 double xstep = width / gridResolutionX;
@@ -315,13 +283,12 @@ namespace WindowsFormsApplication2
             return rand.Next(0, 100000) / 100000.0;
         }
 
-
         private void Form1_Paint(object sender, PaintEventArgs e)
         {
             System.Drawing.Graphics graphicsObj;
 
             graphicsObj = e.Graphics;
-            graphicsObj.Clear(Color.FromArgb(25, 25, 25));
+            graphicsObj.Clear(Color.White);//Color.FromArgb(25, 25, 25)
 
             Pen myPen = new Pen(System.Drawing.Color.Green, 5);
             Pen tmp = new Pen(Color.Black, 5);
@@ -337,21 +304,36 @@ namespace WindowsFormsApplication2
                     }
                     else
                         myPen = new Pen(GetRandomColor(), 5);
-                    
+
                     if (sats[i].Count > 0)
                     {
-                        foreach (Point pnt in sats[i])
+                        Negras.Clear();
+
+                        List<Convex.Point> perimeterPoints = new List<Convex.Point>();
+                        List<Convex.Point> xys = new List<Convex.Point>();
+
+                        xys.Clear();
+                        sats[i].ForEach(s => { xys.Add(new Convex.Point(s.X, s.Y)); });
+                        perimeterPoints = Convex.Convexhull.convexhull(xys.ToArray()).ToList();
+                        perimeterPoints.ForEach(pnt => { Negras.Add(new Point((int)pnt.x, (int)pnt.y)); });
+
+                        List<Point> fuck = new List<Point>();
+                        perimeterPoints.ForEach(p => { fuck.Add(new Point((int)p.x, (int)p.y)); });
+                        graphicsObj.DrawPolygon(tmp, fuck.ToArray());
+                        SolidBrush blueBrush = new SolidBrush(myPen.Color);
+                        graphicsObj.FillPolygon(blueBrush, fuck.ToArray(), System.Drawing.Drawing2D.FillMode.Winding);
+                        if (toggleGrid)
                         {
-                            if(!Negras.Contains(pnt))
-                            graphicsObj.DrawEllipse(myPen, new Rectangle(pnt.X, pnt.Y, 2 * Scale, 2 * Scale));
-                            else
-                                graphicsObj.DrawEllipse(tmp, new Rectangle(pnt.X, pnt.Y, 2 * Scale, 2 * Scale));
+                            foreach (Point pnt in sats[i])
+                            {
+                                graphicsObj.DrawEllipse(tmp, new Rectangle(pnt.X, pnt.Y, 2, 2));
+                            }
                         }
                     }
 
                 }
             }
-            bool show = true;
+            bool show = ShowCenters;
             if (show)
             {
                 for (int i = 0; i < parentCount; i++)
@@ -381,7 +363,8 @@ namespace WindowsFormsApplication2
         {
             t.Enabled = false;
             Converged = false;
-            cc.startBut.Text = t.Enabled ? "Stop" : "Start";
+            if (cc != null)
+                cc.startBut.Text = t.Enabled ? "Stop" : "Start";
             makeboard();
             Refresh();
         }
@@ -407,6 +390,8 @@ namespace WindowsFormsApplication2
         public bool Quality { get { return quality; } set { quality = value; } }
         bool converged = false;
         private bool keepPlaying;
+        public bool toggleGrid = false;
+        public bool ShowCenters = false;
         public bool Converged { get { return converged; } set { converged = value; } }
 
         int GetAvailableGUID()
@@ -419,7 +404,11 @@ namespace WindowsFormsApplication2
             return GUID;
         }
 
-        Color GetRandomColor() { return Color.FromArgb((int)(GetRandomPercentage() * 255), (int)(GetRandomPercentage() * 255), (int)(GetRandomPercentage() * 255)); }
+        Color GetRandomColor() 
+        { 
+            //return Color.FromArgb((int)(GetRandomPercentage() * 255), (int)(GetRandomPercentage() * 255), (int)(GetRandomPercentage() * 255));
+            return Color.Pink;
+        }
 
         private void Form1_MouseDown(object sender, MouseEventArgs e)
         {
@@ -447,12 +436,12 @@ namespace WindowsFormsApplication2
 
                 if (ModifierKeys == Keys.Control)
                 {
-                    if (min < 25)
+                    if (min < 5)
                         RemoveParent(parentGUID);
                     else
                         AddParent();
 
-                    cc.parentCount.Text = parentCount.ToString();
+                    //cc.parentCount.Text = parentCount.ToString();
                 }
                 else
                 {
@@ -561,6 +550,11 @@ namespace WindowsFormsApplication2
         private void Form1_Load(object sender, EventArgs e)
         {
 
+        }
+
+        private void Form1_Resize(object sender, EventArgs e)
+        {
+            makeboard();
         }
 
     }

@@ -39,6 +39,7 @@ namespace WindowsFormsApplication2
             main.satCount = Convert.ToInt32(satcount.Text);
             //main.satCountOriginal = Convert.ToInt32(satcount.Text);
             main.button1_Click(sender, e);
+            startBut_Click(sender, e);
         }
 
         private void ClusterController_Load(object sender, EventArgs e)
@@ -48,9 +49,9 @@ namespace WindowsFormsApplication2
 
         private void trackBar1_Scroll(object sender, EventArgs e)
         {
-            //main.Scale = trackBar1.Value;
-            //main.updateClock(trackBar1.Value);
-            main.Refresh();
+            main.Scale = trackBar1.Value;
+            main.button1_Click(sender, e);
+            startBut_Click(sender, e);
         }
 
         private void radioButton2_CheckedChanged(object sender, EventArgs e)
@@ -66,6 +67,16 @@ namespace WindowsFormsApplication2
         private void checkBox2_CheckedChanged(object sender, EventArgs e)
         {
             main.DEMO_MODE = checkBox2.Checked;
+        }
+
+        private void checkBox3_CheckedChanged(object sender, EventArgs e)
+        {
+            main.toggleGrid = checkBox3.Checked;
+        }
+
+        private void checkBox4_CheckedChanged(object sender, EventArgs e)
+        {
+            main.ShowCenters = checkBox4.Checked;
         }
     }
 }
