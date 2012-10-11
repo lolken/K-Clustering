@@ -41,17 +41,19 @@
             this.label4 = new System.Windows.Forms.Label();
             this.trackBar1 = new System.Windows.Forms.TrackBar();
             this.label5 = new System.Windows.Forms.Label();
-            this.radioButton1 = new System.Windows.Forms.RadioButton();
-            this.radioButton2 = new System.Windows.Forms.RadioButton();
             this.fpslabel = new System.Windows.Forms.Label();
             this.label7 = new System.Windows.Forms.Label();
+            this.radioButton2 = new System.Windows.Forms.RadioButton();
+            this.radioButton1 = new System.Windows.Forms.RadioButton();
+            this.checkBox1 = new System.Windows.Forms.CheckBox();
+            this.checkBox2 = new System.Windows.Forms.CheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.trackBar1)).BeginInit();
             this.SuspendLayout();
             // 
             // startBut
             // 
             this.startBut.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.startBut.Location = new System.Drawing.Point(24, 270);
+            this.startBut.Location = new System.Drawing.Point(24, 346);
             this.startBut.Name = "startBut";
             this.startBut.Size = new System.Drawing.Size(75, 23);
             this.startBut.TabIndex = 2;
@@ -63,7 +65,7 @@
             // 
             this.button1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.button1.BackColor = System.Drawing.Color.Red;
-            this.button1.Location = new System.Drawing.Point(24, 299);
+            this.button1.Location = new System.Drawing.Point(24, 375);
             this.button1.Name = "button1";
             this.button1.Size = new System.Drawing.Size(75, 23);
             this.button1.TabIndex = 3;
@@ -165,17 +167,23 @@
             this.label5.TabIndex = 14;
             this.label5.Text = "Scale";
             // 
-            // radioButton1
+            // fpslabel
             // 
-            this.radioButton1.AutoSize = true;
-            this.radioButton1.Enabled = false;
-            this.radioButton1.Location = new System.Drawing.Point(24, 185);
-            this.radioButton1.Name = "radioButton1";
-            this.radioButton1.Size = new System.Drawing.Size(82, 17);
-            this.radioButton1.TabIndex = 15;
-            this.radioButton1.TabStop = true;
-            this.radioButton1.Text = "High Quality";
-            this.radioButton1.UseVisualStyleBackColor = true;
+            this.fpslabel.AutoSize = true;
+            this.fpslabel.Location = new System.Drawing.Point(37, 401);
+            this.fpslabel.Name = "fpslabel";
+            this.fpslabel.Size = new System.Drawing.Size(22, 13);
+            this.fpslabel.TabIndex = 17;
+            this.fpslabel.Text = "0.0";
+            // 
+            // label7
+            // 
+            this.label7.AutoSize = true;
+            this.label7.Location = new System.Drawing.Point(65, 401);
+            this.label7.Name = "label7";
+            this.label7.Size = new System.Drawing.Size(21, 13);
+            this.label7.TabIndex = 18;
+            this.label7.Text = "fps";
             // 
             // radioButton2
             // 
@@ -191,29 +199,47 @@
             this.radioButton2.UseVisualStyleBackColor = true;
             this.radioButton2.CheckedChanged += new System.EventHandler(this.radioButton2_CheckedChanged);
             // 
-            // fpslabel
+            // radioButton1
             // 
-            this.fpslabel.AutoSize = true;
-            this.fpslabel.Location = new System.Drawing.Point(35, 338);
-            this.fpslabel.Name = "fpslabel";
-            this.fpslabel.Size = new System.Drawing.Size(22, 13);
-            this.fpslabel.TabIndex = 17;
-            this.fpslabel.Text = "0.0";
+            this.radioButton1.AutoSize = true;
+            this.radioButton1.Enabled = false;
+            this.radioButton1.Location = new System.Drawing.Point(24, 185);
+            this.radioButton1.Name = "radioButton1";
+            this.radioButton1.Size = new System.Drawing.Size(82, 17);
+            this.radioButton1.TabIndex = 15;
+            this.radioButton1.TabStop = true;
+            this.radioButton1.Text = "High Quality";
+            this.radioButton1.UseVisualStyleBackColor = true;
             // 
-            // label7
+            // checkBox1
             // 
-            this.label7.AutoSize = true;
-            this.label7.Location = new System.Drawing.Point(63, 338);
-            this.label7.Name = "label7";
-            this.label7.Size = new System.Drawing.Size(21, 13);
-            this.label7.TabIndex = 18;
-            this.label7.Text = "fps";
+            this.checkBox1.AutoSize = true;
+            this.checkBox1.Location = new System.Drawing.Point(34, 281);
+            this.checkBox1.Name = "checkBox1";
+            this.checkBox1.Size = new System.Drawing.Size(58, 17);
+            this.checkBox1.TabIndex = 19;
+            this.checkBox1.Text = "Freeze";
+            this.checkBox1.UseVisualStyleBackColor = true;
+            this.checkBox1.CheckedChanged += new System.EventHandler(this.checkBox1_CheckedChanged);
+            // 
+            // checkBox2
+            // 
+            this.checkBox2.AutoSize = true;
+            this.checkBox2.Location = new System.Drawing.Point(34, 304);
+            this.checkBox2.Name = "checkBox2";
+            this.checkBox2.Size = new System.Drawing.Size(54, 17);
+            this.checkBox2.TabIndex = 20;
+            this.checkBox2.Text = "Demo";
+            this.checkBox2.UseVisualStyleBackColor = true;
+            this.checkBox2.CheckedChanged += new System.EventHandler(this.checkBox2_CheckedChanged);
             // 
             // ClusterController
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(128, 360);
+            this.ClientSize = new System.Drawing.Size(128, 436);
+            this.Controls.Add(this.checkBox2);
+            this.Controls.Add(this.checkBox1);
             this.Controls.Add(this.label7);
             this.Controls.Add(this.fpslabel);
             this.Controls.Add(this.radioButton2);
@@ -256,9 +282,11 @@
         public System.Windows.Forms.Button startBut;
         private System.Windows.Forms.TrackBar trackBar1;
         private System.Windows.Forms.Label label5;
-        private System.Windows.Forms.RadioButton radioButton1;
-        private System.Windows.Forms.RadioButton radioButton2;
         public System.Windows.Forms.Label fpslabel;
         private System.Windows.Forms.Label label7;
+        private System.Windows.Forms.RadioButton radioButton2;
+        private System.Windows.Forms.RadioButton radioButton1;
+        private System.Windows.Forms.CheckBox checkBox1;
+        private System.Windows.Forms.CheckBox checkBox2;
     }
 }

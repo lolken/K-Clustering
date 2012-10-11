@@ -57,5 +57,15 @@ namespace WindowsFormsApplication2
         {
             main.Quality = radioButton2.Checked;
         }
+
+        private void checkBox1_CheckedChanged(object sender, EventArgs e)
+        {
+            main.Frozen = checkBox1.Checked;
+        }
+
+        private void checkBox2_CheckedChanged(object sender, EventArgs e)
+        {
+            main.DEMO_MODE = checkBox2.Checked;
+        }
     }
 }
