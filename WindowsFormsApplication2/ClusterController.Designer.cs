@@ -81,7 +81,7 @@
             this.clusterCount.Name = "clusterCount";
             this.clusterCount.Size = new System.Drawing.Size(100, 20);
             this.clusterCount.TabIndex = 4;
-            this.clusterCount.Text = "100";
+            this.clusterCount.Text = "20";
             this.clusterCount.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             // 
             // clusterRadius
@@ -90,7 +90,7 @@
             this.clusterRadius.Name = "clusterRadius";
             this.clusterRadius.Size = new System.Drawing.Size(100, 20);
             this.clusterRadius.TabIndex = 5;
-            this.clusterRadius.Text = "225";
+            this.clusterRadius.Text = "55";
             this.clusterRadius.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             // 
             // parentCount
@@ -108,7 +108,7 @@
             this.satcount.Name = "satcount";
             this.satcount.Size = new System.Drawing.Size(100, 20);
             this.satcount.TabIndex = 7;
-            this.satcount.Text = "100";
+            this.satcount.Text = "50";
             this.satcount.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             // 
             // label1

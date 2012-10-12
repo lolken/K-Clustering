@@ -118,6 +118,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="kmc.ico" />
+    <None Include="Resources\380.jpg" />
     <None Include="Resources\nipple.png" />
     <None Include="Resources\eye1.png" />
     <None Include="Resources\eye2.png" />

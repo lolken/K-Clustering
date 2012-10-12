@@ -13,6 +13,7 @@ namespace WindowsFormsApplication2
     public partial class Form1 : Form
     {
         public bool DEMO_MODE = false;
+        readonly bool Tatas = false;
 
         #region Control Variables
 
@@ -65,6 +66,7 @@ namespace WindowsFormsApplication2
         Icon icon;
         Icon Dead;
         Icon target;
+        Image skin;
 
         public Form1()
         {
@@ -79,16 +81,16 @@ namespace WindowsFormsApplication2
             this.DoubleBuffered = true;
             OriginalArea = this.Size.Width * this.Size.Height;
             //makeboard();
-
-            //Bitmap bmp = new Bitmap(kMeans.Properties.Resources.eye2);
-
-            Bitmap bmp = new Bitmap(kMeans.Properties.Resources.nipple);
+            skin = new Bitmap(kMeans.Properties.Resources._380);
+            Bitmap bmp = new Bitmap(kMeans.Properties.Resources.eye2);
+            if (Tatas)
+                bmp = new Bitmap(kMeans.Properties.Resources.nipple);
 
             icon = Icon.FromHandle(bmp.GetHicon());
 
-            //bmp = new Bitmap(kMeans.Properties.Resources.eye1);
-
-            bmp = new Bitmap(kMeans.Properties.Resources.nipple);
+            bmp = new Bitmap(kMeans.Properties.Resources.eye1);
+            if (Tatas)
+                bmp = new Bitmap(kMeans.Properties.Resources.nipple);
 
             Dead = Icon.FromHandle(bmp.GetHicon());
             bmp = new Bitmap(kMeans.Properties.Resources.target);
@@ -258,7 +260,7 @@ namespace WindowsFormsApplication2
                 double scaleScreenX = width / rangeX;
                 double scaleScreenY = height / rangeY;
 
-                double gridResolutionX = width / (Scale *10.0 - 4 * (1 - scaleScreenX));
+                double gridResolutionX = width / (Scale * 10.0 - 4 * (1 - scaleScreenX));
                 double gridResolutionY = height / (Scale * 10.0 - 4 * (1 - scaleScreenY));
                 double x = 0; double y = 0;
 
@@ -288,7 +290,10 @@ namespace WindowsFormsApplication2
             System.Drawing.Graphics graphicsObj;
 
             graphicsObj = e.Graphics;
-            graphicsObj.Clear(Color.White);//Color.FromArgb(25, 25, 25)
+            if (!DEMO_MODE)
+                graphicsObj.Clear(Color.White);//Color.FromArgb(25, 25, 25)
+            else
+                graphicsObj.Clear(Color.FromArgb(25, 25, 25));
 
             Pen myPen = new Pen(System.Drawing.Color.Green, 5);
             Pen tmp = new Pen(Color.Black, 5);
@@ -300,7 +305,7 @@ namespace WindowsFormsApplication2
                     {
                         if (!ColorLookup.ContainsKey(parents[i].ID))
                             ColorLookup.Add(parents[i].ID, GetRandomColor());
-                        myPen = new Pen(Color.FromArgb(255, ColorLookup[parents[i].ID]), 5);
+                        myPen = new Pen(ColorLookup[parents[i].ID], 5);
                     }
                     else
                         myPen = new Pen(GetRandomColor(), 5);
@@ -315,20 +320,36 @@ namespace WindowsFormsApplication2
                         xys.Clear();
                         sats[i].ForEach(s => { xys.Add(new Convex.Point(s.X, s.Y)); });
                         perimeterPoints = Convex.Convexhull.convexhull(xys.ToArray()).ToList();
-                        perimeterPoints.ForEach(pnt => { Negras.Add(new Point((int)pnt.x, (int)pnt.y)); });
 
-                        List<Point> fuck = new List<Point>();
-                        perimeterPoints.ForEach(p => { fuck.Add(new Point((int)p.x, (int)p.y)); });
-                        graphicsObj.DrawPolygon(tmp, fuck.ToArray());
-                        SolidBrush blueBrush = new SolidBrush(myPen.Color);
-                        graphicsObj.FillPolygon(blueBrush, fuck.ToArray(), System.Drawing.Drawing2D.FillMode.Winding);
-                        if (toggleGrid)
+                        //perimeterPoints.ForEach(pnt => { Negras.Add(new Point((int)pnt.x, (int)pnt.y)); });
+                        if (!DEMO_MODE)
                         {
-                            foreach (Point pnt in sats[i])
+                            List<Point> fuck = new List<Point>();
+                            perimeterPoints.ForEach(p => { fuck.Add(new Point((int)p.x, (int)p.y)); });
+                            //for (int k = 1; k < fuck.Count - 1; k++)
+                            //{
+                            //    graphicsObj.DrawLine(myPen, fuck[k], fuck[k - 1]);
+                            //    graphicsObj.DrawLine(myPen, fuck[k], parents[i].Location);
+                            //    graphicsObj.DrawLine(myPen, fuck[k + 1], fuck[k - 1]);
+                            //}
+                            graphicsObj.DrawPolygon(tmp, fuck.ToArray());
+                            SolidBrush blueBrush = new SolidBrush(myPen.Color);
+
+                            //TextureBrush tb = new TextureBrush(skin,System.Drawing.Drawing2D.WrapMode.Tile);
+                            graphicsObj.FillPolygon(blueBrush, fuck.ToArray(), System.Drawing.Drawing2D.FillMode.Winding);
+                            if (toggleGrid)
                             {
-                                graphicsObj.DrawEllipse(tmp, new Rectangle(pnt.X, pnt.Y, 2, 2));
+                                foreach (Point pnt in sats[i])
+                                {
+                                    graphicsObj.DrawEllipse(tmp, new Rectangle(pnt.X, pnt.Y, 2, 2));
+                                }
                             }
                         }
+                        else
+                            foreach (Point pnt in sats[i])
+                            {
+                                graphicsObj.DrawEllipse(myPen, new Rectangle(pnt.X, pnt.Y, 2, 2));
+                            }
                     }
 
                 }
@@ -341,9 +362,9 @@ namespace WindowsFormsApplication2
                     if (!ColorLookup.ContainsKey(parents[i].ID))
                         ColorLookup.Add(parents[i].ID, GetRandomColor());
                     if (parents[i].ID == parentGUID && !DEMO_MODE)
-                        graphicsObj.DrawIcon(DEMO_MODE ? target : icon, new Rectangle(parents[i].X - 50, parents[i].Y - 50, 100, 100));
-                    else if (parents[i].ID == eatenGUID && !parents[i].Marked && !DEMO_MODE)
                         graphicsObj.DrawIcon(DEMO_MODE ? target : icon, new Rectangle(parents[i].X - 40, parents[i].Y - 40, 80, 80));
+                    else if (parents[i].ID == eatenGUID && !parents[i].Marked && !DEMO_MODE)
+                        graphicsObj.DrawIcon(DEMO_MODE ? target : icon, new Rectangle(parents[i].X - 30, parents[i].Y - 30, 60, 60));
 
                     if (parents[i].Marked)
                         graphicsObj.DrawIcon(DEMO_MODE ? target : Dead, new Rectangle(parents[i].X - 25, parents[i].Y - 25, 50, 50));
@@ -404,10 +425,12 @@ namespace WindowsFormsApplication2
             return GUID;
         }
 
-        Color GetRandomColor() 
-        { 
-            //return Color.FromArgb((int)(GetRandomPercentage() * 255), (int)(GetRandomPercentage() * 255), (int)(GetRandomPercentage() * 255));
-            return Color.Pink;
+        Color GetRandomColor()
+        {
+            if (!Tatas || DEMO_MODE)
+                return Color.FromArgb(DEMO_MODE ? 255 : 100 + (int)(GetRandomPercentage() * 155), (int)(GetRandomPercentage() * 255), (int)(GetRandomPercentage() * 255), (int)(GetRandomPercentage() * 255));
+            else
+                return Color.Pink;
         }
 
         private void Form1_MouseDown(object sender, MouseEventArgs e)
@@ -510,8 +533,6 @@ namespace WindowsFormsApplication2
                     {
                         if (min < 100)
                         {
-                            //RemoveParent(eatenGUID);
-
                             Kluster found = parents.Find(k => { return k.ID == eatenGUID; });
                             if (found != null)
                             {
