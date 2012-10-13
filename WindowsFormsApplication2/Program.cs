@@ -8,7 +8,7 @@ namespace WindowsFormsApplication2
     static class Program
     {
         /// <summary>
-        /// The main entry point for the application.
+        /// The main entry System.Drawing.Point for the application.
         /// </summary>
         [STAThread]
         static void Main()

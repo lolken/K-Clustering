@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.Windows;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using System.Reflection;
+using System.Numerics;
 
 namespace WindowsFormsApplication2
 {
@@ -33,7 +35,7 @@ namespace WindowsFormsApplication2
         #region Members
         List<Kluster> parents = new List<Kluster>();
         List<Kluster> parentsPrev = new List<Kluster>();
-        List<List<Point>> sats = new List<List<Point>>();
+        List<List<System.Drawing.Point>> sats = new List<List<System.Drawing.Point>>();
         Random rand = new Random();
         Timer FrameRater = new Timer();
         #endregion Members
@@ -58,8 +60,8 @@ namespace WindowsFormsApplication2
 
         bool moused = false;
         Kluster ClusterParent;
-        Point MoveTo = new Point(0, 0);
-        Point Prev = new Point(0, 0);
+        System.Drawing.Point MoveTo = new System.Drawing.Point(0, 0);
+        System.Drawing.Point Prev = new System.Drawing.Point(0, 0);
         int parentGUID = -1;
         int eatenGUID = -1;
 
@@ -108,20 +110,20 @@ namespace WindowsFormsApplication2
             frames = 0;
         }
 
-        List<Point> Negras = new List<Point>();
+        //List<Point> Negras = new List<System.Drawing.Point>();
 
         void t_Tick(object sender, EventArgs e)
         {
             frames += 1;
-            List<Point> tempsat = new List<Point>();
+            List<System.Drawing.Point> tempsat = new List<System.Drawing.Point>(allPoints);
 
-            for (int i = 0; i < sats.Count; i++)
-                tempsat.AddRange(sats[i]);
+            //for (int i = 0; i < sats.Count; i++)
+            //    tempsat.AddRange(sats[i]);
 
             //int clusterCount = sats.Count;
             sats.Clear();
             for (int i = 0; i < parentCount; i++)
-                sats.Add(new List<Point>());
+                sats.Add(new List<System.Drawing.Point>());
 
             double min = double.MaxValue;
             int index = -1;
@@ -139,13 +141,13 @@ namespace WindowsFormsApplication2
                         index = j;
                     }
                 }
-                sats[index].Add(new Point(tempsat[i].X, tempsat[i].Y));
-                //this.Refresh();
+                if (min < 200)
+                    sats[index].Add(new System.Drawing.Point(tempsat[i].X, tempsat[i].Y));
             }
 
             for (int i = 0; i < parents.Count; i++)
             {
-                Point p = getAvgPoint(sats[i]);
+                System.Drawing.Point p = getAvgPoint(sats[i]);
                 if (p.X != -1000 && p.Y != -1000)
                     if (parents[i].ID != parentGUID)
                         parents[i].Location = p;
@@ -155,11 +157,7 @@ namespace WindowsFormsApplication2
 
             bool same = true;
             if (parentsPrev.Count > 0)
-            {
-                for (int i = 0; i < parents.Count; i++)
-                    same &= parents[i].Location == parentsPrev[i].Location;
-
-            }
+                for (int i = 0; i < parents.Count; i++) { same &= parents[i].Location == parentsPrev[i].Location; }
             else
                 same = false;
 
@@ -173,16 +171,16 @@ namespace WindowsFormsApplication2
                 Converged = false;
 
             parentsPrev = new List<Kluster>(parents);
-
+            UpdateGravity();
             Invalidate();
         }
 
-        public Point getAvgPoint(List<Point> Points)
+        public System.Drawing.Point getAvgPoint(List<System.Drawing.Point> Points)
         {
             if (Points.Count == 0)
-                return new Point(-1000, -1000);
+                return new System.Drawing.Point(-1000, -1000);
 
-            return new Point((int)Points.Average(pnt => pnt.X), (int)Points.Average(pnt => pnt.Y));
+            return new System.Drawing.Point((int)Points.Average(pnt => pnt.X), (int)Points.Average(pnt => pnt.Y));
         }
 
         bool ParentsContainsGUID(int key)
@@ -191,7 +189,7 @@ namespace WindowsFormsApplication2
             return k != null;
         }
 
-        public double getDistance(Point parent, Point sat)
+        public double getDistance(System.Drawing.Point parent, System.Drawing.Point sat)
         {
             return Math.Sqrt(Math.Pow(sat.X - parent.X, 2) + Math.Pow(sat.Y - parent.Y, 2));
         }
@@ -207,26 +205,26 @@ namespace WindowsFormsApplication2
             ColorLookup.Clear();
             //ColorsExample.Clear();
             for (int i = 0; i < clusterCount; i++)
-                sats.Add(new List<Point>());
+                sats.Add(new List<System.Drawing.Point>());
 
-            Size size = this.Size;
+            System.Drawing.Size size = this.Size;
 
-            Point random = new Point(-1000, -1000);
+            System.Drawing.Point random = new System.Drawing.Point(-1000, -1000);
 
             for (int i = 0; i < parentCount; i++)
             {
-                random = new Point(-1000, -1000);
+                random = new System.Drawing.Point(-1000, -1000);
 
                 while (random.X > size.Width - 10 || random.X < 0 || random.Y > size.Height - 10 || random.Y < 0)
-                    random = new Point((int)(GetRandomPercentage() * Size.Width), (int)(GetRandomPercentage() * Size.Height));
+                    random = new System.Drawing.Point((int)(GetRandomPercentage() * Size.Width), (int)(GetRandomPercentage() * Size.Height));
 
-                parents.Add(new Kluster(random, GetAvailableGUID()));
+                parents.Add(new Kluster(random, GetAvailableGUID(), this.Size));
             }
 
 
 
             //random = new Point(-1000, -1000);
-            Point RandomClusterPoint = new Point(-1000, -1000);
+            System.Drawing.Point RandomClusterPoint = new System.Drawing.Point(-1000, -1000);
             //double density = Math.Sqrt(((double)(size.Width * size.Height) / OriginalArea));
             //density *= satCountOriginal;
             //satCount = (int)density;
@@ -236,21 +234,22 @@ namespace WindowsFormsApplication2
             {
                 for (int i = 0; i < sats.Count; i++)
                 {
-                    random = new Point(-1000, -1000);
+                    random = new System.Drawing.Point(-1000, -1000);
 
                     while (random.X > size.Width - 10 || random.X < 0 || random.Y > size.Height - 10 || random.Y < 0)
-                        random = new Point((int)(GetRandomPercentage() * Size.Width), (int)(GetRandomPercentage() * Size.Height));
+                        random = new System.Drawing.Point((int)(GetRandomPercentage() * Size.Width), (int)(GetRandomPercentage() * Size.Height));
                     for (int j = 0; j < satCount; j++)
                     {
-                        RandomClusterPoint = new Point(-1000, -1000);
+                        RandomClusterPoint = new System.Drawing.Point(-1000, -1000);
                         while (RandomClusterPoint.X > size.Width - 10 || RandomClusterPoint.X < 0 || RandomClusterPoint.Y > size.Height - 10 || RandomClusterPoint.Y < 0)
-                            RandomClusterPoint = new Point((int)(random.X + Math.Cos(2 * Math.PI * GetRandomPercentage()) * GetRandomPercentage() * ClusterRadius), (int)(random.Y + Math.Sin(2 * Math.PI * GetRandomPercentage()) * GetRandomPercentage() * ClusterRadius));
+                            RandomClusterPoint = new System.Drawing.Point((int)(random.X + Math.Cos(2 * Math.PI * GetRandomPercentage()) * GetRandomPercentage() * ClusterRadius), (int)(random.Y + Math.Sin(2 * Math.PI * GetRandomPercentage()) * GetRandomPercentage() * ClusterRadius));
                         sats[i].Add(RandomClusterPoint);
                     }
                 }
             }
             else
             {
+                allPoints.Clear();
                 double rangeX = 1616.0;
                 double rangeY = 916.0;
 
@@ -272,11 +271,102 @@ namespace WindowsFormsApplication2
                     {
                         x = xstep * i;
                         y = ystep * j;
-                        sats[0].Add(new Point((int)x, (int)y));
+                        sats[0].Add(new System.Drawing.Point((int)x, (int)y));
+                        allPoints.Add(new System.Drawing.Point((int)x, (int)y));
 
                     }
                 }
             }
+        }
+        List<System.Drawing.Point> allPoints = new List<System.Drawing.Point>();
+        double VelocityScale = 0.05;
+        double DrawScale = 0.5;
+        double Friction = 0.95;
+        double attractionForce = 5.0;
+        public void UpdateGravity()
+        {
+            if (parentGUID != -1)
+            {
+                foreach (Kluster g in parents)
+                {
+                    if (g.ID == parentGUID)
+                        continue;
+                    g.Velocity += GetGravEffectSingle(g, attractionForce);
+
+                    //if (g.X + g.Mass * DrawScale >= this.Width || g.X - g.Mass * DrawScale <= 0)
+                    //    g.X *= -1;
+                    //if (g.Y + g.Mass * DrawScale >= this.Height || g.Y - g.Mass * DrawScale <= 0)
+                    //    g.velocity.Y *= -1;
+                }
+            }
+            else
+            {
+                foreach (Kluster g in parents)
+                {
+                    g.velocity.X *= Friction;
+                    g.velocity.Y *= Friction;
+
+                    if (g.X + g.Mass * DrawScale >= this.Width || g.X - g.Mass * DrawScale <= 0)
+                        g.velocity.X *= -1;
+                    if (g.Y + g.Mass * DrawScale >= this.Height || g.Y - g.Mass * DrawScale <= 0)
+                        g.velocity.Y *= -1;
+                }
+            }
+        }
+
+        public Vector GetGravEffectSingle(Kluster other, double GravModifier)
+        {
+            //double GravModifier = -1.0;
+            double scale = 1.0;
+            Kluster k = parents[0];
+            if (parentGUID != -1)
+                k = GetParentWithID(parentGUID);
+            if ((Math.Abs(k.X - other.X) <= k.Mass * scale + other.Mass * scale) &&
+                (Math.Abs(k.Y - other.Y) <= k.Mass * scale + other.Mass * scale))
+            {
+                return new Vector(0, 0);
+            }
+
+            double tAngle = Math.Atan2((k.Y - other.Y), (k.X - other.X));
+
+            double tMagnitude = (GravModifier * k.Mass * other.Mass / ((Math.Pow((k.X - other.X), 2)) + (Math.Pow((k.Y - other.Y), 2)))) * 1000;
+
+            Complex c = Complex.FromPolarCoordinates(tMagnitude, tAngle);
+
+            Vector r = new Vector(c.Real, c.Imaginary);
+
+            return r;
+        }
+
+        public Vector GetGravEffectAll(Kluster about)
+        {
+            double GravModifier = 0.5;
+            double scale = 0.1;
+            double sumReal = 0;
+            double sumImaginary = 0;
+
+            foreach (var k in parents)
+            {
+                if (k.ID == parentGUID)
+                    GravModifier = -0.1;
+                else
+                    GravModifier = 0.2;
+                if ((Math.Abs(k.X - about.X) <= k.Mass * scale + about.Mass * scale) &&
+                (Math.Abs(k.Y - about.Y) <= k.Mass * scale + about.Mass * scale))
+                {
+                    continue;
+                }
+
+                double tAngle = Math.Atan2((k.Y - about.Y), (k.X - about.X));
+
+                double tMagnitude = (GravModifier * k.Mass * about.Mass / ((Math.Pow((k.X - about.X), 2)) + (Math.Pow((k.Y - about.Y), 2)))) * 1000;
+
+                Complex c = Complex.FromPolarCoordinates(tMagnitude, tAngle);
+                sumReal += c.Real;
+                sumImaginary += c.Imaginary;
+            }
+
+            return new Vector(sumReal, sumImaginary);
         }
 
 
@@ -312,7 +402,7 @@ namespace WindowsFormsApplication2
 
                     if (sats[i].Count > 0)
                     {
-                        Negras.Clear();
+                        //Negras.Clear();
 
                         List<Convex.Point> perimeterPoints = new List<Convex.Point>();
                         List<Convex.Point> xys = new List<Convex.Point>();
@@ -324,8 +414,8 @@ namespace WindowsFormsApplication2
                         //perimeterPoints.ForEach(pnt => { Negras.Add(new Point((int)pnt.x, (int)pnt.y)); });
                         if (!DEMO_MODE)
                         {
-                            List<Point> fuck = new List<Point>();
-                            perimeterPoints.ForEach(p => { fuck.Add(new Point((int)p.x, (int)p.y)); });
+                            List<System.Drawing.Point> fuck = new List<System.Drawing.Point>();
+                            perimeterPoints.ForEach(p => { fuck.Add(new System.Drawing.Point((int)p.x, (int)p.y)); });
                             //for (int k = 1; k < fuck.Count - 1; k++)
                             //{
                             //    graphicsObj.DrawLine(myPen, fuck[k], fuck[k - 1]);
@@ -339,14 +429,14 @@ namespace WindowsFormsApplication2
                             graphicsObj.FillPolygon(blueBrush, fuck.ToArray(), System.Drawing.Drawing2D.FillMode.Winding);
                             if (toggleGrid)
                             {
-                                foreach (Point pnt in sats[i])
+                                foreach (System.Drawing.Point pnt in sats[i])
                                 {
                                     graphicsObj.DrawEllipse(tmp, new Rectangle(pnt.X, pnt.Y, 2, 2));
                                 }
                             }
                         }
                         else
-                            foreach (Point pnt in sats[i])
+                            foreach (System.Drawing.Point pnt in sats[i])
                             {
                                 graphicsObj.DrawEllipse(myPen, new Rectangle(pnt.X, pnt.Y, 2, 2));
                             }
@@ -406,7 +496,18 @@ namespace WindowsFormsApplication2
                 //FrameRater.Stop();
                 //t.Stop();
             }
+
         }
+
+        Kluster GetParentWithID(int id)
+        {
+            int retIndex = parents.FindIndex(pnt => { return pnt.ID == id; });
+            if (retIndex < parents.Count)
+                return parents[retIndex];
+            return null;
+        }
+
+
         bool quality = true;
         public bool Quality { get { return quality; } set { quality = value; } }
         bool converged = false;
@@ -438,10 +539,47 @@ namespace WindowsFormsApplication2
             if (!t.Enabled)
                 return;
 
-            MoveTo = new Point(e.X, e.Y);
+            MoveTo = new System.Drawing.Point(e.X, e.Y);
 
             if (e.Button == System.Windows.Forms.MouseButtons.Left)
             {
+                attractionForce = 2.0;
+                int min = int.MaxValue;
+                double distance = 0;
+                parents.ForEach(pnt =>
+                {
+                    distance = getDistance(pnt.Location, MoveTo);
+                    if (distance < min)
+                    {
+                        min = (int)distance;
+                        ClusterParent = pnt;
+                    }
+                });
+                ClusterParent.IsMaster = true;
+                int parentindex = parents.FindIndex(pnt => { return pnt.Location == ClusterParent.Location; });
+                parentGUID = parents[parentindex].ID;
+
+                if (ModifierKeys == Keys.Control)
+                {
+                    if (min < 5)
+                        RemoveParent(parentGUID);
+                    else
+                        AddParent();
+
+                    //cc.parentCount.Text = parentCount.ToString();
+                }
+                else
+                {
+                    if (min < 400)
+                    {
+                        moused = true;
+                        Prev = MoveTo;
+                    }
+                }
+            }
+            else if (e.Button == System.Windows.Forms.MouseButtons.Right)
+            {
+                attractionForce = -2.0;
                 int min = int.MaxValue;
                 double distance = 0;
                 parents.ForEach(pnt =>
@@ -489,8 +627,8 @@ namespace WindowsFormsApplication2
         }
         void AddParent()
         {
-            parents.Add(new Kluster(new Point(MoveTo.X, MoveTo.Y), GetAvailableGUID(), Frozen));
-            parentsPrev.Add(new Kluster(new Point(MoveTo.X, MoveTo.Y), GetAvailableGUID(), Frozen));
+            parents.Add(new Kluster(new System.Drawing.Point(MoveTo.X, MoveTo.Y), GetAvailableGUID(), Frozen, this.Size));
+            parentsPrev.Add(new Kluster(new System.Drawing.Point(MoveTo.X, MoveTo.Y), GetAvailableGUID(), Frozen, this.Size));
             parentCount += 1;
             if (!ColorLookup.ContainsKey(parents[parents.Count - 1].ID))
                 ColorLookup.Add(parents[parents.Count - 1].ID, GetRandomColor());
@@ -501,17 +639,17 @@ namespace WindowsFormsApplication2
         {
             if (moused)
             {
-                MoveTo = new Point(e.X, e.Y);
+                MoveTo = new System.Drawing.Point(e.X, e.Y);
 
                 int parentind = parents.FindIndex(pnt => { return pnt.ID == parentGUID; });
-                parents[parentind].Location = new Point(parents[parentind].X + (MoveTo.X - Prev.X), parents[parentind].Y + (MoveTo.Y - Prev.Y));
+                parents[parentind].Location = new System.Drawing.Point(parents[parentind].X + (MoveTo.X - Prev.X), parents[parentind].Y + (MoveTo.Y - Prev.Y));
 
                 if (!DEMO_MODE)
                 {
                     int min = int.MaxValue;
                     double distance = 0;
                     int tmpindex = 0;
-                    Point eatme = new Point(-1000, -1000);
+                    System.Drawing.Point eatme = new System.Drawing.Point(-1000, -1000);
                     for (int i = 0; i < parents.Count; i++)
                     {
                         if (parents[i].ID != parentGUID)
@@ -583,32 +721,55 @@ namespace WindowsFormsApplication2
     public class Kluster
     {
         int guid = -1;
-        Point location = new Point(0, 0);
+        System.Drawing.Point location = new System.Drawing.Point(0, 0);
         bool marked = false;
         bool freeze = false;
+        double mass = 10.0;
+        public Vector velocity = new Vector(0, 0);
+
+        public Vector Velocity
+        {
+            get { return velocity; }
+            set
+            {
+                Vector v = new Vector(Math.Min(value.X, 0.005), Math.Min(value.Y, 0.005));
+                velocity = value;
+            }
+        }
+
+        double acceleration = 0.0;
+        System.Drawing.Size size = new System.Drawing.Size();
+        public double Mass
+        {
+            get { return mass; }
+            set { mass = value; }
+        }
+
         public bool Marked
         {
             get { return marked; }
             set { marked = value; }
         }
         //private Kluster pnt;
-        public Kluster(Point pnt, int GUID, bool frozen)
+        public Kluster(System.Drawing.Point pnt, int GUID, bool frozen, System.Drawing.Size Max)
         {
+            size = Max;
             Frozen = frozen;
-            location = new Point(pnt.X, pnt.Y);
+            location = new System.Drawing.Point(pnt.X, pnt.Y);
             ID = GUID;
         }
 
-        public Kluster(Point pnt, int GUID)
+        public Kluster(System.Drawing.Point pnt, int GUID, System.Drawing.Size Max)
         {
+            size = Max;
             Frozen = false;
-            location = new Point(pnt.X, pnt.Y);
+            location = new System.Drawing.Point(pnt.X, pnt.Y);
             ID = GUID;
         }
 
         public Kluster(Kluster pnt)
         {
-            location = new Point(pnt.X, pnt.Y);
+            location = new System.Drawing.Point(pnt.X, pnt.Y);
             ID = pnt.ID;
         }
 
@@ -623,28 +784,32 @@ namespace WindowsFormsApplication2
         public bool IsMaster
         {
             get { return master; }
-            set { master = value; }
+            set
+            {
+                master = value;
+                Mass = value ? 10 : 10;
+            }
         }
-        public Point Location
+        public System.Drawing.Point Location
         {
             get { return location; }
             set
             {
                 if (IsMaster)
-                    location = new Point(value.X, value.Y);
+                    location = new System.Drawing.Point(value.X, value.Y);
                 if (Frozen)
                     return;
-                //if (!this.Marked)
-                location = new Point(value.X, value.Y);
+                int x, y;
+                x = location.X;
+                y = location.Y;
+                if ((int)(value.X + velocity.X) < size.Width - 10 && (int)(value.X + velocity.X) > 10)
+                    x = (int)(value.X + velocity.X);
+                if ((int)(value.Y + velocity.Y) < size.Height - 10 && (int)(value.Y + velocity.Y) > 10)
+                    y = (int)(value.Y + velocity.Y);
+                // location = new System.Drawing.Point((int)(value.X + velocity.X), (int)(value.Y + velocity.Y));
+                location = new System.Drawing.Point(x, y);
 
             }
-        }
-
-        List<Point> minions = new List<Point>();
-        public List<Point> Minions
-        {
-            get { return minions; }
-            set { minions = value; }
         }
         public int X { get { return location.X; } set { location.X = value; } }
         public int Y { get { return location.Y; } set { location.Y = value; } }
