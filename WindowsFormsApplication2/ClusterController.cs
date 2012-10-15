@@ -78,5 +78,11 @@ namespace WindowsFormsApplication2
         {
             main.ShowCenters = checkBox4.Checked;
         }
+
+        private void checkBox5_CheckedChanged(object sender, EventArgs e)
+        {
+            main.activateField = checkBox5.Checked;
+            checkBox4.Checked = true;
+        }
     }
 }

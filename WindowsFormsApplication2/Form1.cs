@@ -9,6 +9,9 @@ using System.Text;
 using System.Windows.Forms;
 using System.Reflection;
 using System.Numerics;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Collections.Concurrent;
 
 namespace WindowsFormsApplication2
 {
@@ -35,12 +38,15 @@ namespace WindowsFormsApplication2
         #region Members
         List<Kluster> parents = new List<Kluster>();
         List<Kluster> parentsPrev = new List<Kluster>();
+        //ConcurrentBag<ConcurrentBag<System.Drawing.Point>> sats = new ConcurrentBag<ConcurrentBag<System.Drawing.Point>>();
         List<List<System.Drawing.Point>> sats = new List<List<System.Drawing.Point>>();
+        Mutex mutex;
+
         Random rand = new Random();
-        Timer FrameRater = new Timer();
+        System.Windows.Forms.Timer FrameRater = new System.Windows.Forms.Timer();
         #endregion Members
 
-        public Timer t = new Timer();
+        public System.Windows.Forms.Timer t = new System.Windows.Forms.Timer();
 
         private bool freeze = false;
 
@@ -73,7 +79,7 @@ namespace WindowsFormsApplication2
         public Form1()
         {
             InitializeComponent();
-
+            mutex = new Mutex();
             t.Interval = interval;
 
             t.Tick += new EventHandler(t_Tick);
@@ -114,46 +120,96 @@ namespace WindowsFormsApplication2
 
         void t_Tick(object sender, EventArgs e)
         {
+            // mutex.WaitOne();
+
             frames += 1;
-            List<System.Drawing.Point> tempsat = new List<System.Drawing.Point>(allPoints);
+            //List<System.Drawing.Point> tempsat = new List<System.Drawing.Point>(allPoints);
 
-            //for (int i = 0; i < sats.Count; i++)
-            //    tempsat.AddRange(sats[i]);
-
-            //int clusterCount = sats.Count;
             sats.Clear();
             for (int i = 0; i < parentCount; i++)
                 sats.Add(new List<System.Drawing.Point>());
 
-            double min = double.MaxValue;
-            int index = -1;
-            double distance = 0;
-            for (int i = 0; i < tempsat.Count; i++)
-            {
-                min = double.MaxValue;
-                index = -1;
-                for (int j = 0; j < parents.Count; j++)
+            Parallel.ForEach(allPoints, (pnt) =>
                 {
-                    distance = getDistance(parents[j].Location, tempsat[i]);
-                    if (distance < min)
+                    double min = double.MaxValue;
+                    int index = -1;
+                    for (int j = 0; j < parents.Count; j++)
                     {
-                        min = distance;
-                        index = j;
+                        double distance = getDistance(parents[j].Location, pnt);
+                        if (distance < min)
+                        {
+                            min = distance;
+                            index = j;
+                        }
                     }
-                }
-                if (min < 200)
-                    sats[index].Add(new System.Drawing.Point(tempsat[i].X, tempsat[i].Y));
-            }
+                    if (DEMO_MODE)
+                        lock (sats) { sats[index].Add(new System.Drawing.Point(pnt.X, pnt.Y)); }
+
+                    else if (activateField)
+                    {
+                        if (min < parents[index].Radius)
+                            lock (sats) { sats[index].Add(new System.Drawing.Point(pnt.X, pnt.Y)); }
+                    }
+                    else
+                        lock (sats) { sats[index].Add(new System.Drawing.Point(pnt.X, pnt.Y)); }
+
+                });
+
+            #region SEQUENCIAL METHOD
+
+            //double min = double.MaxValue;
+            //int index = -1;
+            //double distance = 0;
+
+            //for (int i = 0; i < allPoints.Count; i++)
+            //{
+            //    min = double.MaxValue;
+            //    index = -1;
+            //    for (int j = 0; j < parents.Count; j++)
+            //    {
+            //        distance = getDistance(parents[j].Location, allPoints[i]);
+            //        if (distance < min)
+            //        {
+            //            min = distance;
+            //            index = j;
+            //        }
+            //    }
+            //    if (min < parents[index].Radius)
+            //        sats[index].Add(new System.Drawing.Point(allPoints[i].X, allPoints[i].Y));
+            //}
+
+            #endregion SEQUENCIAL METHOD
 
             for (int i = 0; i < parents.Count; i++)
             {
                 System.Drawing.Point p = getAvgPoint(sats[i]);
                 if (p.X != -1000 && p.Y != -1000)
-                    if (parents[i].ID != parentGUID)
+                    if (parents[i].ID != parentGUID && !parents[i].Frozen)
                         parents[i].Location = p;
             }
 
+            List<Kluster> deleteMe = new List<Kluster>();
+            for (int i = 0; i < parents.Count; i++)
+            {
+                for (int j = 0; j < parents.Count; j++)
+                {
+                    if (i != j)
+                    {
+                        double distance = getDistance(parents[i].Location, parents[j].Location);
+                        if (distance < 50)
+                        {
+                            if (parents[j].ID != parentGUID && !deleteMe.Contains(parents[i]) && !deleteMe.Contains(parents[j]))
+                            {
+                                parents[i].Radius += parents[j].Radius / 3.0;
+                                parents[i].Mass *= 2;
+                                deleteMe.Add(parents[j]);
+                            }
+                        }
+                    }
+                }
+            }
 
+            deleteMe.ForEach(k => { RemoveParent(k.ID); });
 
             bool same = true;
             if (parentsPrev.Count > 0)
@@ -170,6 +226,7 @@ namespace WindowsFormsApplication2
             else
                 Converged = false;
 
+            //mutex.ReleaseMutex();
             parentsPrev = new List<Kluster>(parents);
             UpdateGravity();
             Invalidate();
@@ -230,6 +287,7 @@ namespace WindowsFormsApplication2
             //satCount = (int)density;
             //cc.satcount.Text = satCount.ToString();
             //ClusterRadius = (size.Width * size.Height) / 9000;
+            allPoints.Clear();
             if (DEMO_MODE)
             {
                 for (int i = 0; i < sats.Count; i++)
@@ -244,6 +302,7 @@ namespace WindowsFormsApplication2
                         while (RandomClusterPoint.X > size.Width - 10 || RandomClusterPoint.X < 0 || RandomClusterPoint.Y > size.Height - 10 || RandomClusterPoint.Y < 0)
                             RandomClusterPoint = new System.Drawing.Point((int)(random.X + Math.Cos(2 * Math.PI * GetRandomPercentage()) * GetRandomPercentage() * ClusterRadius), (int)(random.Y + Math.Sin(2 * Math.PI * GetRandomPercentage()) * GetRandomPercentage() * ClusterRadius));
                         sats[i].Add(RandomClusterPoint);
+                        allPoints.Add(RandomClusterPoint);
                     }
                 }
             }
@@ -279,12 +338,17 @@ namespace WindowsFormsApplication2
             }
         }
         List<System.Drawing.Point> allPoints = new List<System.Drawing.Point>();
+
         double VelocityScale = 0.05;
         double DrawScale = 0.5;
-        double Friction = 0.95;
+        double Friction = 0.99;
         double attractionForce = 5.0;
+        public bool activateField = false;
         public void UpdateGravity()
         {
+            if (DEMO_MODE || !activateField)
+                return;
+
             if (parentGUID != -1)
             {
                 foreach (Kluster g in parents)
@@ -292,19 +356,22 @@ namespace WindowsFormsApplication2
                     if (g.ID == parentGUID)
                         continue;
                     g.Velocity += GetGravEffectSingle(g, attractionForce);
-
-                    //if (g.X + g.Mass * DrawScale >= this.Width || g.X - g.Mass * DrawScale <= 0)
-                    //    g.X *= -1;
-                    //if (g.Y + g.Mass * DrawScale >= this.Height || g.Y - g.Mass * DrawScale <= 0)
-                    //    g.velocity.Y *= -1;
+                    g.velocity.X *= Friction;
+                    g.velocity.Y *= Friction;
                 }
             }
             else
             {
                 foreach (Kluster g in parents)
                 {
+                    g.Velocity += GetGravEffectAll(g, 0.5);
+
                     g.velocity.X *= Friction;
                     g.velocity.Y *= Friction;
+                    //if (g.Y > 50)
+                    //    g.Y += (int)(((double)g.Y / 50.0));
+                    //else
+                    //    g.velocity.Y = 0;
 
                     if (g.X + g.Mass * DrawScale >= this.Width || g.X - g.Mass * DrawScale <= 0)
                         g.velocity.X *= -1;
@@ -321,6 +388,8 @@ namespace WindowsFormsApplication2
             Kluster k = parents[0];
             if (parentGUID != -1)
                 k = GetParentWithID(parentGUID);
+            if (k == null)
+                k = parents[0];
             if ((Math.Abs(k.X - other.X) <= k.Mass * scale + other.Mass * scale) &&
                 (Math.Abs(k.Y - other.Y) <= k.Mass * scale + other.Mass * scale))
             {
@@ -338,33 +407,56 @@ namespace WindowsFormsApplication2
             return r;
         }
 
-        public Vector GetGravEffectAll(Kluster about)
+        public Vector GetGravEffectAll(Kluster about, double GravModifier)
         {
-            double GravModifier = 0.5;
-            double scale = 0.1;
+            double scale = 0.05;
             double sumReal = 0;
             double sumImaginary = 0;
 
-            foreach (var k in parents)
-            {
-                if (k.ID == parentGUID)
-                    GravModifier = -0.1;
-                else
-                    GravModifier = 0.2;
-                if ((Math.Abs(k.X - about.X) <= k.Mass * scale + about.Mass * scale) &&
-                (Math.Abs(k.Y - about.Y) <= k.Mass * scale + about.Mass * scale))
+            Parallel.ForEach(parents, (k) =>
                 {
-                    continue;
-                }
+                    if (k.ID == parentGUID)
+                        GravModifier = -0.1;
+                    else
+                        GravModifier = 0.2;
+                    if ((Math.Abs(k.X - about.X) <= k.Mass * scale + about.Mass * scale) &&
+                    (Math.Abs(k.Y - about.Y) <= k.Mass * scale + about.Mass * scale))
+                    {
+                        sumReal += 0;
+                        sumImaginary += 0;
+                    }
+                    else
+                    {
 
-                double tAngle = Math.Atan2((k.Y - about.Y), (k.X - about.X));
+                        double tAngle = Math.Atan2((k.Y - about.Y), (k.X - about.X));
 
-                double tMagnitude = (GravModifier * k.Mass * about.Mass / ((Math.Pow((k.X - about.X), 2)) + (Math.Pow((k.Y - about.Y), 2)))) * 1000;
+                        double tMagnitude = (GravModifier * k.Mass * about.Mass / ((Math.Pow((k.X - about.X), 2)) + (Math.Pow((k.Y - about.Y), 2)))) * 1000;
 
-                Complex c = Complex.FromPolarCoordinates(tMagnitude, tAngle);
-                sumReal += c.Real;
-                sumImaginary += c.Imaginary;
-            }
+                        Complex c = Complex.FromPolarCoordinates(tMagnitude, tAngle);
+                        sumReal += c.Real;
+                        sumImaginary += c.Imaginary;
+                    }
+                });
+            //foreach (var k in parents)
+            //{
+            //    if (k.ID == parentGUID)
+            //        GravModifier = -0.1;
+            //    else
+            //        GravModifier = 0.2;
+            //    if ((Math.Abs(k.X - about.X) <= k.Mass * scale + about.Mass * scale) &&
+            //    (Math.Abs(k.Y - about.Y) <= k.Mass * scale + about.Mass * scale))
+            //    {
+            //        continue;
+            //    }
+
+            //    double tAngle = Math.Atan2((k.Y - about.Y), (k.X - about.X));
+
+            //    double tMagnitude = (GravModifier * k.Mass * about.Mass / ((Math.Pow((k.X - about.X), 2)) + (Math.Pow((k.Y - about.Y), 2)))) * 1000;
+
+            //    Complex c = Complex.FromPolarCoordinates(tMagnitude, tAngle);
+            //    sumReal += c.Real;
+            //    sumImaginary += c.Imaginary;
+            //}
 
             return new Vector(sumReal, sumImaginary);
         }
@@ -502,7 +594,7 @@ namespace WindowsFormsApplication2
         Kluster GetParentWithID(int id)
         {
             int retIndex = parents.FindIndex(pnt => { return pnt.ID == id; });
-            if (retIndex < parents.Count)
+            if (retIndex < parents.Count && retIndex != -1)
                 return parents[retIndex];
             return null;
         }
@@ -543,7 +635,7 @@ namespace WindowsFormsApplication2
 
             if (e.Button == System.Windows.Forms.MouseButtons.Left)
             {
-                attractionForce = 2.0;
+                attractionForce = 3.0;
                 int min = int.MaxValue;
                 double distance = 0;
                 parents.ForEach(pnt =>
@@ -555,6 +647,9 @@ namespace WindowsFormsApplication2
                         ClusterParent = pnt;
                     }
                 });
+                //if (min > 100)
+                //  return;
+
                 ClusterParent.IsMaster = true;
                 int parentindex = parents.FindIndex(pnt => { return pnt.Location == ClusterParent.Location; });
                 parentGUID = parents[parentindex].ID;
@@ -579,7 +674,7 @@ namespace WindowsFormsApplication2
             }
             else if (e.Button == System.Windows.Forms.MouseButtons.Right)
             {
-                attractionForce = -2.0;
+                attractionForce = -3.0;
                 int min = int.MaxValue;
                 double distance = 0;
                 parents.ForEach(pnt =>
@@ -591,6 +686,7 @@ namespace WindowsFormsApplication2
                         ClusterParent = pnt;
                     }
                 });
+
                 ClusterParent.IsMaster = true;
                 int parentindex = parents.FindIndex(pnt => { return pnt.Location == ClusterParent.Location; });
                 parentGUID = parents[parentindex].ID;
@@ -618,11 +714,13 @@ namespace WindowsFormsApplication2
         {
             if (parents.Count > 1)
             {
+                mutex.WaitOne();
+                Console.WriteLine("removing parent.id {0}", GUID);
                 ColorLookup.Remove(GUID);
                 parents.Remove(parents.Find(k => { return k.ID == GUID; }));
                 parentsPrev.Remove(parentsPrev.Find(k => { return k.ID == GUID; }));
                 parentCount -= 1;
-
+                mutex.ReleaseMutex();
             }
         }
         void AddParent()
@@ -725,6 +823,13 @@ namespace WindowsFormsApplication2
         bool marked = false;
         bool freeze = false;
         double mass = 10.0;
+        double radius = 100;
+
+        public double Radius
+        {
+            get { return radius; }
+            set { radius = value; }
+        }
         public Vector velocity = new Vector(0, 0);
 
         public Vector Velocity
@@ -737,7 +842,6 @@ namespace WindowsFormsApplication2
             }
         }
 
-        double acceleration = 0.0;
         System.Drawing.Size size = new System.Drawing.Size();
         public double Mass
         {
@@ -787,7 +891,7 @@ namespace WindowsFormsApplication2
             set
             {
                 master = value;
-                Mass = value ? 10 : 10;
+                Mass = value ? 2 : 1;
             }
         }
         public System.Drawing.Point Location

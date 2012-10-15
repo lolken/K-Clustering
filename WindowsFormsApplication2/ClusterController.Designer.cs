@@ -49,6 +49,7 @@
             this.checkBox2 = new System.Windows.Forms.CheckBox();
             this.checkBox3 = new System.Windows.Forms.CheckBox();
             this.checkBox4 = new System.Windows.Forms.CheckBox();
+            this.checkBox5 = new System.Windows.Forms.CheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.trackBar1)).BeginInit();
             this.SuspendLayout();
             // 
@@ -248,7 +249,7 @@
             // checkBox4
             // 
             this.checkBox4.AutoSize = true;
-            this.checkBox4.Location = new System.Drawing.Point(24, 346);
+            this.checkBox4.Location = new System.Drawing.Point(19, 346);
             this.checkBox4.Name = "checkBox4";
             this.checkBox4.Size = new System.Drawing.Size(92, 17);
             this.checkBox4.TabIndex = 22;
@@ -256,11 +257,23 @@
             this.checkBox4.UseVisualStyleBackColor = true;
             this.checkBox4.CheckedChanged += new System.EventHandler(this.checkBox4_CheckedChanged);
             // 
+            // checkBox5
+            // 
+            this.checkBox5.AutoSize = true;
+            this.checkBox5.Location = new System.Drawing.Point(12, 368);
+            this.checkBox5.Name = "checkBox5";
+            this.checkBox5.Size = new System.Drawing.Size(110, 17);
+            this.checkBox5.TabIndex = 23;
+            this.checkBox5.Text = "Gravitational Field";
+            this.checkBox5.UseVisualStyleBackColor = true;
+            this.checkBox5.CheckedChanged += new System.EventHandler(this.checkBox5_CheckedChanged);
+            // 
             // ClusterController
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(128, 481);
+            this.Controls.Add(this.checkBox5);
             this.Controls.Add(this.checkBox4);
             this.Controls.Add(this.checkBox3);
             this.Controls.Add(this.checkBox2);
@@ -315,5 +328,6 @@
         private System.Windows.Forms.CheckBox checkBox2;
         private System.Windows.Forms.CheckBox checkBox3;
         private System.Windows.Forms.CheckBox checkBox4;
+        private System.Windows.Forms.CheckBox checkBox5;
     }
 }
