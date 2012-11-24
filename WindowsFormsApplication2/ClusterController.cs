@@ -17,6 +17,8 @@ namespace WindowsFormsApplication2
             main = mainForm;
             InitializeComponent();
             trackBar1_Scroll(this, new EventArgs());
+            checkBox2_CheckedChanged(this, new EventArgs());
+            checkBox4_CheckedChanged(this, new EventArgs());
         }
 
         private void ClusterController_FormClosing(object sender, FormClosingEventArgs e)
@@ -44,14 +46,14 @@ namespace WindowsFormsApplication2
 
         private void ClusterController_Load(object sender, EventArgs e)
         {
-            button1_Click(sender, e);
+            //button1_Click(sender, e);
         }
 
         private void trackBar1_Scroll(object sender, EventArgs e)
         {
             main.Scale = trackBar1.Value;
             main.button1_Click(sender, e);
-            startBut_Click(sender, e);
+            //startBut_Click(sender, e);
         }
 
         private void radioButton2_CheckedChanged(object sender, EventArgs e)
@@ -83,6 +85,12 @@ namespace WindowsFormsApplication2
         {
             main.activateField = checkBox5.Checked;
             checkBox4.Checked = true;
+        }
+
+        private void gammaSlider_Scroll(object sender, EventArgs e)
+        {
+            main.gamma = (double)(gammaSlider.Value)/1000.0;
+            gammaLabel.Text = "gamma = " + ((double)(gammaSlider.Value) / 1000.0).ToString("#0.000");
         }
     }
 }

@@ -12,20 +12,34 @@ using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Collections.Concurrent;
+using kMeans;
 
 namespace WindowsFormsApplication2
 {
     public partial class Form1 : Form
     {
+        public System.Drawing.Color InterpolateBetweenColors(double max, double min, double val, System.Drawing.Color StartColor, System.Drawing.Color EndColor)
+        {
+            System.Drawing.Color color1 = StartColor;
+            System.Drawing.Color color2 = EndColor;
+            double fraction = (val - min) / (max - min);
+            System.Drawing.Color color3 = System.Drawing.Color.FromArgb(
+                (int)(color1.R * fraction + color2.R * (1 - fraction)),
+                (int)(color1.G * fraction + color2.G * (1 - fraction)),
+                (int)(color1.B * fraction + color2.B * (1 - fraction)));
+
+            return color3;
+        }
+
         public bool DEMO_MODE = false;
         readonly bool Tatas = false;
 
         #region Control Variables
 
         public int ClusterRadius = 100;
-        public int parentCount = 50;
-        public int interval = (int)(1000.0 / 60.0);
-        public int clusterCount = 300;
+        public int parentCount = 2;
+        public int interval = (int)(1000.0 / 10.0);
+        public int clusterCount = 30;
         public int satCount = 50;
         public int satCountOriginal = 50;
         public int Scale = 1;
@@ -36,7 +50,7 @@ namespace WindowsFormsApplication2
         #endregion Control Variables
 
         #region Members
-        List<Kluster> parents = new List<Kluster>();
+        public List<Kluster> parents = new List<Kluster>();
         List<Kluster> parentsPrev = new List<Kluster>();
         //ConcurrentBag<ConcurrentBag<System.Drawing.Point>> sats = new ConcurrentBag<ConcurrentBag<System.Drawing.Point>>();
         List<List<System.Drawing.Point>> sats = new List<List<System.Drawing.Point>>();
@@ -117,11 +131,93 @@ namespace WindowsFormsApplication2
         }
 
         //List<Point> Negras = new List<System.Drawing.Point>();
+        kMeans.RBFLiteCluster rbf;
+        List<List<double>> heightClusters = new List<List<double>>();
 
         void t_Tick(object sender, EventArgs e)
         {
-            // mutex.WaitOne();
+            mutex.WaitOne();
+            //bool swtch = true;
+            //if (swtch && DEMO_MODE)
+            //{
+            //    sats.Clear();
+            //    //heights.Clear();
+            //    for (int i = 0; i < parentCount; i++)
+            //        sats.Add(new List<System.Drawing.Point>());
 
+            //    double min = double.MaxValue;
+            //    int index = -1;
+            //    double distance = 0;
+
+            //    foreach (System.Drawing.Point pnt in allPoints)
+            //    {
+            //        List<double> heights = new List<double>();
+            //        for (int j = 0; j < parents.Count; j++)
+            //        {
+            //            distance = getDistance(parents[j].Location, pnt);
+            //            if (distance < min)
+            //            {
+            //                min = distance;
+            //                index = j;
+            //            }
+            //        }
+
+            //        sats[index].Add(new System.Drawing.Point(pnt.X, pnt.Y));
+            //    }
+
+            //    //#endregion SEQUENCIAL METHOD
+            //    for (int i = 0; i < parents.Count; i++)
+            //    {
+            //        System.Drawing.Point p = getAvgPoint(sats[i]);
+            //        if (p.X != -1000 && p.Y != -1000)
+            //            if (parents[i].ID != parentGUID && !parents[i].Frozen)
+            //                parents[i].Location = p;
+            //    }
+
+            //    List<Kluster> deleteMe = new List<Kluster>();
+            //    for (int i = 0; i < parents.Count; i++)
+            //    {
+            //        for (int j = 0; j < parents.Count; j++)
+            //        {
+            //            if (i != j)
+            //            {
+            //                distance = getDistance(parents[i].Location, parents[j].Location);
+            //                if (distance < 50)
+            //                {
+            //                    if (parents[j].ID != parentGUID && !deleteMe.Contains(parents[i]) && !deleteMe.Contains(parents[j]))
+            //                    {
+            //                        parents[i].Radius += parents[j].Radius / 3.0;
+            //                        parents[i].Mass *= 2;
+            //                        deleteMe.Add(parents[j]);
+            //                    }
+            //                }
+            //            }
+            //        }
+            //    }
+
+            //    deleteMe.ForEach(k => { RemoveParent(k.ID); });
+
+            //    bool same = true;
+            //    if (parentsPrev.Count > 0)
+            //        for (int i = 0; i < parents.Count; i++) { same &= parents[i].Location == parentsPrev[i].Location; }
+            //    else
+            //        same = false;
+
+            //    if (same)
+            //    {
+            //        //t.Enabled = false;
+            //        cc.startBut.Text = t.Enabled ? "Stop" : "Start";
+            //        Converged = true;
+            //    }
+            //    else
+            //        Converged = false;
+
+            //    //
+            //    parentsPrev = new List<Kluster>(parents);
+            //    UpdateGravity();
+            //    Invalidate();
+            //    return;
+            //}
             frames += 1;
             //List<System.Drawing.Point> tempsat = new List<System.Drawing.Point>(allPoints);
 
@@ -155,6 +251,19 @@ namespace WindowsFormsApplication2
 
                 });
 
+            //rbf = fromRBF(allPoints, parents);
+            //heightClusters.Clear();
+            //parents.ForEach(cl =>
+            //    {
+            //        List<double> heights = new List<double>();
+            //        sats[parents.IndexOf(cl)].ForEach(sat =>
+            //            {
+            //                heights.Add(rbf.Eval(new double[] { sat.X, sat.Y }));
+            //            });
+            //        heightClusters.Add(new List<double>(heights));
+
+            //    });
+
             #region SEQUENCIAL METHOD
 
             //double min = double.MaxValue;
@@ -180,6 +289,7 @@ namespace WindowsFormsApplication2
 
             #endregion SEQUENCIAL METHOD
 
+            //fromRBF(allPoints, parents);
             for (int i = 0; i < parents.Count; i++)
             {
                 System.Drawing.Point p = getAvgPoint(sats[i]);
@@ -188,36 +298,36 @@ namespace WindowsFormsApplication2
                         parents[i].Location = p;
             }
 
-            List<Kluster> deleteMe = new List<Kluster>();
-            for (int i = 0; i < parents.Count; i++)
-            {
-                for (int j = 0; j < parents.Count; j++)
-                {
-                    if (i != j)
-                    {
-                        double distance = getDistance(parents[i].Location, parents[j].Location);
-                        if (distance < 50)
-                        {
-                            if (parents[j].ID != parentGUID && !deleteMe.Contains(parents[i]) && !deleteMe.Contains(parents[j]))
-                            {
-                                parents[i].Radius += parents[j].Radius / 3.0;
-                                parents[i].Mass *= 2;
-                                deleteMe.Add(parents[j]);
-                            }
-                        }
-                    }
-                }
-            }
+            //List<Kluster> deleteMe1 = new List<Kluster>();
+            //for (int i = 0; i < parents.Count; i++)
+            //{
+            //    for (int j = 0; j < parents.Count; j++)
+            //    {
+            //        if (i != j)
+            //        {
+            //            double distance = getDistance(parents[i].Location, parents[j].Location);
+            //            if (distance < 50)
+            //            {
+            //                if (parents[j].ID != parentGUID && !deleteMe1.Contains(parents[i]) && !deleteMe1.Contains(parents[j]))
+            //                {
+            //                    parents[i].Radius += parents[j].Radius / 3.0;
+            //                    parents[i].Mass *= 2;
+            //                    deleteMe1.Add(parents[j]);
+            //                }
+            //            }
+            //        }
+            //    }
+            //}
 
-            deleteMe.ForEach(k => { RemoveParent(k.ID); });
+            //deleteMe1.ForEach(k => { RemoveParent(k.ID); });
 
-            bool same = true;
+            bool same1 = true;
             if (parentsPrev.Count > 0)
-                for (int i = 0; i < parents.Count; i++) { same &= parents[i].Location == parentsPrev[i].Location; }
+                for (int i = 0; i < parents.Count; i++) { same1 &= parents[i].Location == parentsPrev[i].Location; }
             else
-                same = false;
+                same1 = false;
 
-            if (same)
+            if (same1)
             {
                 //t.Enabled = false;
                 cc.startBut.Text = t.Enabled ? "Stop" : "Start";
@@ -226,11 +336,23 @@ namespace WindowsFormsApplication2
             else
                 Converged = false;
 
-            //mutex.ReleaseMutex();
+            mutex.ReleaseMutex();
             parentsPrev = new List<Kluster>(parents);
             UpdateGravity();
             Invalidate();
+            if (rbfframe != null)
+                rbfframe.SetNetworkVariables(sats, parents, gamma);
         }
+        public double gamma = 0.01;
+        // private RBFLiteCluster fromRBF(List<System.Drawing.Point> allPoints, List<Kluster> parents)
+        //{
+        //List<double> heights = new List<double>(parents.Count);
+        //List<double[]> targets = parents.ConvertAll(new Converter<Kluster, double[]>(k => { return new double[] { k.X, k.Y }; }));
+        //kMeans.RBFLiteCluster rbf = 
+        //List<System.Drawing.Point> ret = new List<System.Drawing.Point>();
+        //targets.ForEach(t => { ret.Add(new System.Drawing.Point(t[0], t[1])); });
+        //return new kMeans.RBFLiteCluster(allPoints.ConvertAll(new Converter<System.Drawing.Point, double[]>((k) => { return new double[] { k.X, k.Y }; })), targets);
+        //}
 
         public System.Drawing.Point getAvgPoint(List<System.Drawing.Point> Points)
         {
@@ -250,6 +372,8 @@ namespace WindowsFormsApplication2
         {
             return Math.Sqrt(Math.Pow(sat.X - parent.X, 2) + Math.Pow(sat.Y - parent.Y, 2));
         }
+
+        //public double getRBFDistance
 
         public void makeboard()
         {
@@ -315,8 +439,10 @@ namespace WindowsFormsApplication2
                 double width = this.Width;
                 double height = this.Height;
 
-                double scaleScreenX = width / rangeX;
-                double scaleScreenY = height / rangeY;
+                //double scaleScreenX = width / rangeX;
+                //double scaleScreenY = height / rangeY;
+                double scaleScreenX = 1;
+                double scaleScreenY = 1;
 
                 double gridResolutionX = width / (Scale * 10.0 - 4 * (1 - scaleScreenX));
                 double gridResolutionY = height / (Scale * 10.0 - 4 * (1 - scaleScreenY));
@@ -336,10 +462,12 @@ namespace WindowsFormsApplication2
                     }
                 }
             }
+
+
         }
         List<System.Drawing.Point> allPoints = new List<System.Drawing.Point>();
 
-        double VelocityScale = 0.05;
+        //double VelocityScale = 0.05;
         double DrawScale = 0.5;
         double Friction = 0.99;
         double attractionForce = 5.0;
@@ -461,7 +589,6 @@ namespace WindowsFormsApplication2
             return new Vector(sumReal, sumImaginary);
         }
 
-
         double GetRandomPercentage()
         {
             return rand.Next(0, 100000) / 100000.0;
@@ -494,18 +621,21 @@ namespace WindowsFormsApplication2
 
                     if (sats[i].Count > 0)
                     {
+                        mutex.WaitOne();
                         //Negras.Clear();
 
-                        List<Convex.Point> perimeterPoints = new List<Convex.Point>();
-                        List<Convex.Point> xys = new List<Convex.Point>();
 
-                        xys.Clear();
-                        sats[i].ForEach(s => { xys.Add(new Convex.Point(s.X, s.Y)); });
-                        perimeterPoints = Convex.Convexhull.convexhull(xys.ToArray()).ToList();
 
                         //perimeterPoints.ForEach(pnt => { Negras.Add(new Point((int)pnt.x, (int)pnt.y)); });
-                        if (!DEMO_MODE)
+                        if (DEMO_MODE)
                         {
+                            List<Convex.Point> perimeterPoints = new List<Convex.Point>();
+                            List<Convex.Point> xys = new List<Convex.Point>();
+
+                            xys.Clear();
+                            sats[i].ForEach(s => { xys.Add(new Convex.Point(s.X, s.Y)); });
+                            perimeterPoints = Convex.Convexhull.convexhull(xys.ToArray()).ToList();
+
                             List<System.Drawing.Point> fuck = new List<System.Drawing.Point>();
                             perimeterPoints.ForEach(p => { fuck.Add(new System.Drawing.Point((int)p.x, (int)p.y)); });
                             //for (int k = 1; k < fuck.Count - 1; k++)
@@ -523,19 +653,45 @@ namespace WindowsFormsApplication2
                             {
                                 foreach (System.Drawing.Point pnt in sats[i])
                                 {
-                                    graphicsObj.DrawEllipse(tmp, new Rectangle(pnt.X, pnt.Y, 2, 2));
+                                    graphicsObj.DrawEllipse(tmp, new Rectangle(pnt.X, pnt.Y, 1, 1));
                                 }
                             }
                         }
                         else
+                        {
+                            int count = 0;
+                            Pen tmpPen = new Pen(Color.White);
+                            double max = 0;
+                            double min = 0;
+                            //graphicsObj.Clear(Color.White);
+                            //lock (sats)
+                            //{
+                            //lock (heightClusters)
+                            //{
+
                             foreach (System.Drawing.Point pnt in sats[i])
                             {
-                                graphicsObj.DrawEllipse(myPen, new Rectangle(pnt.X, pnt.Y, 2, 2));
+                                if (heightClusters.Count == sats.Count)//ColorLookup[parents[i].ID]
+                                {
+                                    max = heightClusters[i].Max();
+                                    min = heightClusters[i].Min();
+                                    double fraction = (heightClusters[i][count++] - min) / (max - min);
+                                    Color c = InterpolateBetweenColors(1, 0, fraction, Color.White, ColorLookup[parents[i].ID]);
+                                    tmpPen = new Pen(c, 1);
+                                }
+                                //graphicsObj.DrawEllipse(myPen, new Rectangle(pnt.X, pnt.Y, 2, 2));
+                                graphicsObj.DrawEllipse(tmpPen, new Rectangle(pnt.X, pnt.Y, 2, 2));
                             }
+                            //}
+                            //}
+                        }
+                        mutex.ReleaseMutex();
                     }
+
 
                 }
             }
+
             bool show = ShowCenters;
             if (show)
             {
@@ -572,8 +728,6 @@ namespace WindowsFormsApplication2
             Refresh();
         }
 
-
-
         public void startBut_Click(object sender, EventArgs e)
         {
             if (!t.Enabled)
@@ -586,7 +740,7 @@ namespace WindowsFormsApplication2
             else
             {
                 //FrameRater.Stop();
-                //t.Stop();
+                t.Stop();
             }
 
         }
@@ -598,7 +752,6 @@ namespace WindowsFormsApplication2
                 return parents[retIndex];
             return null;
         }
-
 
         bool quality = true;
         public bool Quality { get { return quality; } set { quality = value; } }
@@ -626,7 +779,7 @@ namespace WindowsFormsApplication2
                 return Color.Pink;
         }
 
-        private void Form1_MouseDown(object sender, MouseEventArgs e)
+        public void Form1_MouseDown(object sender, MouseEventArgs e)
         {
             if (!t.Enabled)
                 return;
@@ -662,6 +815,10 @@ namespace WindowsFormsApplication2
                         AddParent();
 
                     //cc.parentCount.Text = parentCount.ToString();
+                }
+                else if (ModifierKeys == Keys.Shift)
+                {
+                    AddPoints(MoveTo);
                 }
                 else
                 {
@@ -700,6 +857,10 @@ namespace WindowsFormsApplication2
 
                     //cc.parentCount.Text = parentCount.ToString();
                 }
+                else if (ModifierKeys == Keys.Shift)
+                {
+                    RemovePoints(MoveTo);
+                }
                 else
                 {
                     if (min < 400)
@@ -708,6 +869,33 @@ namespace WindowsFormsApplication2
                         Prev = MoveTo;
                     }
                 }
+            }
+        }
+
+        private void RemovePoints(System.Drawing.Point MoveTo)
+        {
+            List<double> lengths = new List<double>();
+            allPoints.ForEach(pnt => { lengths.Add(getDistance(MoveTo, pnt)); });
+            List<System.Drawing.Point> tmp = new List<System.Drawing.Point>(allPoints);
+            lock (allPoints)
+            {
+                Array.Sort(lengths.ToArray(), tmp.ToArray());
+                tmp.Reverse();
+                for (int i = 0; i < satCount; i++)
+                    allPoints.Remove(tmp[i]);
+            }
+        }
+
+        private void AddPoints(System.Drawing.Point MoveTo)
+        {
+            System.Drawing.Point RandomClusterPoint = new System.Drawing.Point(-1000, -1000);
+
+            for (int j = 0; j < satCount; j++)
+            {
+                RandomClusterPoint = new System.Drawing.Point(-1000, -1000);
+                while (RandomClusterPoint.X > this.Size.Width - 10 || RandomClusterPoint.X < 0 || RandomClusterPoint.Y > this.Size.Height - 10 || RandomClusterPoint.Y < 0)
+                    RandomClusterPoint = new System.Drawing.Point((int)(MoveTo.X + Math.Cos(2 * Math.PI * GetRandomPercentage()) * GetRandomPercentage() * ClusterRadius), (int)(MoveTo.Y + Math.Sin(2 * Math.PI * GetRandomPercentage()) * GetRandomPercentage() * ClusterRadius));
+                allPoints.Add(RandomClusterPoint);
             }
         }
         void RemoveParent(int GUID)
@@ -733,7 +921,7 @@ namespace WindowsFormsApplication2
             else
                 ColorLookup[parents[parents.Count - 1].ID] = GetRandomColor();
         }
-        private void Form1_MouseMove(object sender, MouseEventArgs e)
+        public void Form1_MouseMove(object sender, MouseEventArgs e)
         {
             if (moused)
             {
@@ -795,7 +983,7 @@ namespace WindowsFormsApplication2
             }
         }
 
-        private void Form1_MouseUp(object sender, MouseEventArgs e)
+        public void Form1_MouseUp(object sender, MouseEventArgs e)
         {
             if (ClusterParent != null)
                 ClusterParent.IsMaster = false;
@@ -804,17 +992,73 @@ namespace WindowsFormsApplication2
             eatenGUID = -1;
         }
 
+        MultRBF rbfframe;
         private void Form1_Load(object sender, EventArgs e)
         {
+            rbfframe = new MultRBF(this);
+            rbfframe.Size = new System.Drawing.Size(this.Size.Width, this.Size.Height);
+            rbfframe.Show();
 
         }
 
         private void Form1_Resize(object sender, EventArgs e)
         {
             makeboard();
+            if (rbfframe != null)
+                rbfframe.Size = new System.Drawing.Size(this.Size.Width, this.Size.Height);
         }
 
     }
+
+    //public class MiniRBF
+    //{
+    //    public List<double> weights = new List<double>();
+    //    public List<System.Drawing.Point> centers = new List<System.Drawing.Point>();
+    //    double gamma = 0.1;
+
+    //    public MiniRBF(List<System.Drawing.Point> cents, System.Drawing.Point output)
+    //    {
+    //        //centers = inputs.ConvertAll(new Converter<Satellite, Point>((pnt) => { return pnt.Position; }));
+    //        centers = new List<System.Drawing.Point>(cents);
+    //        double[,] phiMat = new double[centers.Count, centers.Count];
+    //        for (int i = 0; i < centers.Count; i++)
+    //            for (int j = 0; j < centers.Count; j++)
+    //                phiMat[i, j] = Math.Exp(-gamma * getDistance(centers[i], centers[j]));
+
+    //        List<double> z = new List<double>(centers.Count);
+    //        centers.ForEach(val => z.Add(100));
+
+    //        weights = solve(phiMat, z.ToArray());
+    //        if (weights.Contains(double.NaN))
+    //            MessageBox.Show("NaN in weights");
+    //    }
+
+    //    public double getDistance(System.Drawing.Point parent, System.Drawing.Point sat)
+    //    {
+    //        return Math.Sqrt(Math.Pow(sat.X - parent.X, 2) + Math.Pow(sat.Y - parent.Y, 2));
+    //    }
+
+    //    List<double> solve(double[,] phi, double[] z)
+    //    {
+    //        var matrixA = new DenseMatrix(phi);
+    //        var matAInverse = matrixA.Inverse();
+
+    //        var vectorB = new DenseVector(z);
+
+    //        Vector<double> resultX = matAInverse.LU().Solve(vectorB);
+    //        List<double> w2 = new List<double>(resultX.ToArray());
+    //        return w2;
+    //    }
+
+    //    public double Eval(System.Drawing.Point p)
+    //    {
+    //        double ret = 0;
+    //        for (int i = 0; i < weights.Count; i++)
+    //            ret += weights[i] * Math.Exp(-gamma * getDistance(p, centers[i]));
+
+    //        return ret;
+    //    }
+    //}
 
     public class Kluster
     {
@@ -822,7 +1066,7 @@ namespace WindowsFormsApplication2
         System.Drawing.Point location = new System.Drawing.Point(0, 0);
         bool marked = false;
         bool freeze = false;
-        double mass = 10.0;
+        double mass = 2;
         double radius = 100;
 
         public double Radius
@@ -891,7 +1135,7 @@ namespace WindowsFormsApplication2
             set
             {
                 master = value;
-                Mass = value ? 2 : 1;
+                Mass = value ? 5 : 2;
             }
         }
         public System.Drawing.Point Location

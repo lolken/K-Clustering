@@ -50,13 +50,16 @@
             this.checkBox3 = new System.Windows.Forms.CheckBox();
             this.checkBox4 = new System.Windows.Forms.CheckBox();
             this.checkBox5 = new System.Windows.Forms.CheckBox();
+            this.gammaSlider = new System.Windows.Forms.TrackBar();
+            this.gammaLabel = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.trackBar1)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.gammaSlider)).BeginInit();
             this.SuspendLayout();
             // 
             // startBut
             // 
             this.startBut.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.startBut.Location = new System.Drawing.Point(24, 391);
+            this.startBut.Location = new System.Drawing.Point(24, 487);
             this.startBut.Name = "startBut";
             this.startBut.Size = new System.Drawing.Size(75, 23);
             this.startBut.TabIndex = 2;
@@ -68,7 +71,7 @@
             // 
             this.button1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.button1.BackColor = System.Drawing.Color.Red;
-            this.button1.Location = new System.Drawing.Point(24, 420);
+            this.button1.Location = new System.Drawing.Point(24, 516);
             this.button1.Name = "button1";
             this.button1.Size = new System.Drawing.Size(75, 23);
             this.button1.TabIndex = 3;
@@ -91,7 +94,7 @@
             this.clusterRadius.Name = "clusterRadius";
             this.clusterRadius.Size = new System.Drawing.Size(100, 20);
             this.clusterRadius.TabIndex = 5;
-            this.clusterRadius.Text = "55";
+            this.clusterRadius.Text = "100";
             this.clusterRadius.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             // 
             // parentCount
@@ -109,7 +112,7 @@
             this.satcount.Name = "satcount";
             this.satcount.Size = new System.Drawing.Size(100, 20);
             this.satcount.TabIndex = 7;
-            this.satcount.Text = "50";
+            this.satcount.Text = "20";
             this.satcount.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             // 
             // label1
@@ -172,7 +175,7 @@
             // fpslabel
             // 
             this.fpslabel.AutoSize = true;
-            this.fpslabel.Location = new System.Drawing.Point(37, 446);
+            this.fpslabel.Location = new System.Drawing.Point(43, 542);
             this.fpslabel.Name = "fpslabel";
             this.fpslabel.Size = new System.Drawing.Size(22, 13);
             this.fpslabel.TabIndex = 17;
@@ -181,7 +184,7 @@
             // label7
             // 
             this.label7.AutoSize = true;
-            this.label7.Location = new System.Drawing.Point(65, 446);
+            this.label7.Location = new System.Drawing.Point(65, 542);
             this.label7.Name = "label7";
             this.label7.Size = new System.Drawing.Size(21, 13);
             this.label7.TabIndex = 18;
@@ -227,6 +230,8 @@
             // checkBox2
             // 
             this.checkBox2.AutoSize = true;
+            this.checkBox2.Checked = true;
+            this.checkBox2.CheckState = System.Windows.Forms.CheckState.Checked;
             this.checkBox2.Location = new System.Drawing.Point(24, 300);
             this.checkBox2.Name = "checkBox2";
             this.checkBox2.Size = new System.Drawing.Size(54, 17);
@@ -249,6 +254,8 @@
             // checkBox4
             // 
             this.checkBox4.AutoSize = true;
+            this.checkBox4.Checked = true;
+            this.checkBox4.CheckState = System.Windows.Forms.CheckState.Checked;
             this.checkBox4.Location = new System.Drawing.Point(19, 346);
             this.checkBox4.Name = "checkBox4";
             this.checkBox4.Size = new System.Drawing.Size(92, 17);
@@ -268,11 +275,33 @@
             this.checkBox5.UseVisualStyleBackColor = true;
             this.checkBox5.CheckedChanged += new System.EventHandler(this.checkBox5_CheckedChanged);
             // 
+            // gammaSlider
+            // 
+            this.gammaSlider.Location = new System.Drawing.Point(12, 403);
+            this.gammaSlider.Maximum = 100;
+            this.gammaSlider.Minimum = 1;
+            this.gammaSlider.Name = "gammaSlider";
+            this.gammaSlider.Size = new System.Drawing.Size(104, 45);
+            this.gammaSlider.TabIndex = 24;
+            this.gammaSlider.Value = 1;
+            this.gammaSlider.Scroll += new System.EventHandler(this.gammaSlider_Scroll);
+            // 
+            // gammaLabel
+            // 
+            this.gammaLabel.AutoSize = true;
+            this.gammaLabel.Location = new System.Drawing.Point(25, 435);
+            this.gammaLabel.Name = "gammaLabel";
+            this.gammaLabel.Size = new System.Drawing.Size(74, 13);
+            this.gammaLabel.TabIndex = 25;
+            this.gammaLabel.Text = "gamma = 0.01";
+            // 
             // ClusterController
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(128, 481);
+            this.ClientSize = new System.Drawing.Size(128, 577);
+            this.Controls.Add(this.gammaLabel);
+            this.Controls.Add(this.gammaSlider);
             this.Controls.Add(this.checkBox5);
             this.Controls.Add(this.checkBox4);
             this.Controls.Add(this.checkBox3);
@@ -301,6 +330,7 @@
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.ClusterController_FormClosing);
             this.Load += new System.EventHandler(this.ClusterController_Load);
             ((System.ComponentModel.ISupportInitialize)(this.trackBar1)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.gammaSlider)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -329,5 +359,7 @@
         private System.Windows.Forms.CheckBox checkBox3;
         private System.Windows.Forms.CheckBox checkBox4;
         private System.Windows.Forms.CheckBox checkBox5;
+        private System.Windows.Forms.TrackBar gammaSlider;
+        private System.Windows.Forms.Label gammaLabel;
     }
 }

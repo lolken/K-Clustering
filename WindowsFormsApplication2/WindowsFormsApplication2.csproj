@@ -60,6 +60,12 @@
     <ApplicationIcon>kmc.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="MathNet.Numerics">
+      <HintPath>..\..\..\Visual Studio 2012\Projects\RBF Network\RBF Network\bin\Debug\MathNet.Numerics.dll</HintPath>
+    </Reference>
+    <Reference Include="MathNet.Numerics.IO">
+      <HintPath>..\..\..\Visual Studio 2012\Projects\RBF Network\RBF Network\bin\Debug\MathNet.Numerics.IO.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Numerics" />
@@ -87,13 +93,24 @@
     <Compile Include="Form1.Designer.cs">
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
+    <Compile Include="MultRBF.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="MultRBF.Designer.cs">
+      <DependentUpon>MultRBF.cs</DependentUpon>
+    </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RBFLite.cs" />
+    <Compile Include="RBFLiteCluster.cs" />
     <EmbeddedResource Include="ClusterController.resx">
       <DependentUpon>ClusterController.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MultRBF.resx">
+      <DependentUpon>MultRBF.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
