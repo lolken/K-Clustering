@@ -38,9 +38,9 @@ namespace WindowsFormsApplication2
 
         public int ClusterRadius = 100;
         public int parentCount = 2;
-        public int interval = (int)(1000.0 / 10.0);
-        public int clusterCount = 30;
-        public int satCount = 50;
+        public int interval = (int)(1000.0 / 20.0);
+        public int clusterCount = 10;
+        public int satCount = 20;
         public int satCountOriginal = 50;
         public int Scale = 1;
         double OriginalArea = -1;
@@ -131,7 +131,7 @@ namespace WindowsFormsApplication2
         }
 
         //List<Point> Negras = new List<System.Drawing.Point>();
-        kMeans.RBFLiteCluster rbf;
+        //kMeans.RBFLiteCluster rbf;
         List<List<double>> heightClusters = new List<List<double>>();
 
         void t_Tick(object sender, EventArgs e)
@@ -425,8 +425,12 @@ namespace WindowsFormsApplication2
                         RandomClusterPoint = new System.Drawing.Point(-1000, -1000);
                         while (RandomClusterPoint.X > size.Width - 10 || RandomClusterPoint.X < 0 || RandomClusterPoint.Y > size.Height - 10 || RandomClusterPoint.Y < 0)
                             RandomClusterPoint = new System.Drawing.Point((int)(random.X + Math.Cos(2 * Math.PI * GetRandomPercentage()) * GetRandomPercentage() * ClusterRadius), (int)(random.Y + Math.Sin(2 * Math.PI * GetRandomPercentage()) * GetRandomPercentage() * ClusterRadius));
-                        sats[i].Add(RandomClusterPoint);
-                        allPoints.Add(RandomClusterPoint);
+                        //if (allPoints.Find(pnt => { return pnt.X == RandomClusterPoint.X && pnt.Y == RandomClusterPoint.Y; }) == null)
+                        if (!allPoints.Contains(RandomClusterPoint))
+                        {
+                            sats[i].Add(RandomClusterPoint);
+                            allPoints.Add(RandomClusterPoint);
+                        }
                     }
                 }
             }
@@ -893,9 +897,14 @@ namespace WindowsFormsApplication2
             for (int j = 0; j < satCount; j++)
             {
                 RandomClusterPoint = new System.Drawing.Point(-1000, -1000);
-                while (RandomClusterPoint.X > this.Size.Width - 10 || RandomClusterPoint.X < 0 || RandomClusterPoint.Y > this.Size.Height - 10 || RandomClusterPoint.Y < 0)
+                while (RandomClusterPoint.X > this.Size.Width - 20 || RandomClusterPoint.X < 20 || RandomClusterPoint.Y > this.Size.Height - 20 || RandomClusterPoint.Y < 20)
                     RandomClusterPoint = new System.Drawing.Point((int)(MoveTo.X + Math.Cos(2 * Math.PI * GetRandomPercentage()) * GetRandomPercentage() * ClusterRadius), (int)(MoveTo.Y + Math.Sin(2 * Math.PI * GetRandomPercentage()) * GetRandomPercentage() * ClusterRadius));
-                allPoints.Add(RandomClusterPoint);
+
+
+                //if (allPoints.Find(pnt => { return pnt.X == RandomClusterPoint.X && pnt.Y == RandomClusterPoint.Y; }) != null)
+                if (!allPoints.Contains(RandomClusterPoint))
+                    allPoints.Add(RandomClusterPoint);
+                
             }
         }
         void RemoveParent(int GUID)
@@ -992,20 +1001,22 @@ namespace WindowsFormsApplication2
             eatenGUID = -1;
         }
 
-        MultRBF rbfframe;
+        public MultRBF rbfframe;
         private void Form1_Load(object sender, EventArgs e)
         {
             rbfframe = new MultRBF(this);
             rbfframe.Size = new System.Drawing.Size(this.Size.Width, this.Size.Height);
             rbfframe.Show();
 
-        }
+        } 
 
         private void Form1_Resize(object sender, EventArgs e)
         {
+            //t.Enabled = false;
             makeboard();
             if (rbfframe != null)
                 rbfframe.Size = new System.Drawing.Size(this.Size.Width, this.Size.Height);
+            //t.Enabled = true;
         }
 
     }

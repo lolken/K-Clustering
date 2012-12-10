@@ -14,17 +14,69 @@ namespace kMeans
     {
         List<double> weights = new List<double>();
         List<double[]> centers = new List<double[]>();
-        public double gamma = 0.1;
+        public double gamma = 0.5;
 
-        public RBFLite(List<double[]> inputs, List<double> output)
+        public RBFLite(List<double[]> inputs, double[] centerXYZ, double density, double g)
         {
+            gamma = g;
             centers = new List<double[]>(inputs);
             double[,] phiMat = new double[centers.Count, centers.Count];
+            //double distance = 0;
+            //for (int i = 0; i < centers.Count; i++)
+            //{
+            //    for (int j = 0; j < centers.Count; j++)
+            //    {
+            //        distance = getDistance(centers[i], centers[j]);
+            //        phiMat[i, j] = Math.Pow(distance, 2) * Math.Log(distance);
+            //    }
+            //}
+            //weights = solve(phiMat, output.ToArray());
+
+            //gamma = CalculateGamma(inputs, centerXYZ);
             for (int i = 0; i < centers.Count; i++)
                 for (int j = 0; j < centers.Count; j++)
                     phiMat[i, j] = Math.Exp(-gamma * getDistance(centers[i], centers[j]));
 
-            weights = solve(phiMat, output.ToArray());
+            List<double> targets = new List<double>();
+            inputs.ForEach(val => { targets.Add(density); });
+            weights = solve(phiMat, targets.ToArray());
+        }
+
+        public RBFLite(List<double[]> inputs, double[] centerXYZ, double g)
+        {
+            gamma = g;
+            centers = new List<double[]>(inputs);
+            double[,] phiMat = new double[centers.Count, centers.Count];
+            //double distance = 0;
+            //for (int i = 0; i < centers.Count; i++)
+            //{
+            //    for (int j = 0; j < centers.Count; j++)
+            //    {
+            //        distance = getDistance(centers[i], centers[j]);
+            //        phiMat[i, j] = Math.Pow(distance, 2) * Math.Log(distance);
+            //    }
+            //}
+            //weights = solve(phiMat, output.ToArray());
+
+            //gamma = CalculateGamma(inputs, centerXYZ);
+            for (int i = 0; i < centers.Count; i++)
+                for (int j = 0; j < centers.Count; j++)
+                    phiMat[i, j] = Math.Exp(-gamma * getDistance(centers[i], centers[j]));
+
+            List<double> targets = new List<double>();
+            inputs.ForEach(val => { targets.Add(100); });
+            weights = solve(phiMat, targets.ToArray());
+        }
+
+        private double CalculateGamma(List<double[]> inputs, double[] centerXYZ)
+        {
+            double sum = 0;
+            inputs.ForEach(val =>
+            {
+                sum += getDistance(centerXYZ, val);
+
+            });
+            return Math.Sqrt(sum / (1000.0 * inputs.Count));
         }
 
         public double getDistance(double[] parent, double[] sat)
@@ -60,12 +112,12 @@ namespace kMeans
 
         public static List<double> SolveRightNow(List<double[]> inputs, List<double> outputs, double gamma)
         {
-            distanceFighter getDistance = ((p1, p2) => 
+            distanceFighter getDistance = ((p1, p2) =>
             {
                 double ret = 0;
                 for (int i = 0; i < p1.Rank; i++)
                     ret += Math.Pow(p1[i] - p2[i], 2);
-                return Math.Sqrt(ret); 
+                return Math.Sqrt(ret);
             });
 
             List<double> weights = new List<double>(inputs.Count);

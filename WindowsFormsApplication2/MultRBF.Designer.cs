@@ -35,7 +35,7 @@
             // 
             this.checkBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.checkBox1.AutoSize = true;
-            this.checkBox1.Location = new System.Drawing.Point(585, 362);
+            this.checkBox1.Location = new System.Drawing.Point(337, 318);
             this.checkBox1.Name = "checkBox1";
             this.checkBox1.Size = new System.Drawing.Size(15, 14);
             this.checkBox1.TabIndex = 0;
@@ -46,10 +46,11 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(602, 376);
+            this.ClientSize = new System.Drawing.Size(354, 332);
             this.Controls.Add(this.checkBox1);
             this.Name = "MultRBF";
             this.Text = "MultRBF";
+            this.SizeChanged += new System.EventHandler(this.MultRBF_SizeChanged);
             this.Paint += new System.Windows.Forms.PaintEventHandler(this.MultRBF_Paint_1);
             this.MouseDown += new System.Windows.Forms.MouseEventHandler(this.MultRBF_MouseDown_1);
             this.MouseMove += new System.Windows.Forms.MouseEventHandler(this.MultRBF_MouseMove);

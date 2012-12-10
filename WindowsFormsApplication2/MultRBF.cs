@@ -26,6 +26,7 @@ namespace WindowsFormsApplication2
             initializeWorker();
             Bitmap bmp = new Bitmap(kMeans.Properties.Resources.target);
             target = Icon.FromHandle(bmp.GetHicon());
+            surfaceForm.Show();
         }
         Form1 Main;
         void initializeWorker()
@@ -37,10 +38,15 @@ namespace WindowsFormsApplication2
             worker.RunWorkerCompleted += worker_RunWorkerCompleted;
         }
 
+        kMeans._3dForm surfaceForm = new kMeans._3dForm();
+        List<List<ColoredPoint>> pntCollection = new List<List<ColoredPoint>>();
+        double[] gridRes = new double[2];
+
         void worker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
             //coloredPoints = new List<ColoredPoint>(e.Result as List<ColoredPoint>);
             Invalidate();
+            surfaceForm.UpdateSurfacePointMesh(pntCollection, 370 / 4);
         }
 
         void worker_ProgressChanged(object sender, ProgressChangedEventArgs e)
@@ -49,6 +55,9 @@ namespace WindowsFormsApplication2
         }
         public double gamma = 0.01;
         int PixelDensity = 2;
+
+        public bool Type1 = false;
+        //List<double> vals = new List<double>();
         void worker_DoWork(object sender, DoWorkEventArgs e)
         {
             object[] arguments = e.Argument as object[];
@@ -56,38 +65,49 @@ namespace WindowsFormsApplication2
             List<Kluster> output = new List<Kluster>(arguments[1] as List<Kluster>);
 
             List<double[]> allpoints = new List<double[]>();
-            List<double[]> outs = new List<double[]>();
+            List<double[]> ClusterCenters = new List<double[]>();
             List<double> clusterCounts = new List<double>(0);
             lock (inputs)
             {
-                int count = 0;
+                //int count = 0;
                 inputs.ForEach(satList =>
                 {
-
-                    satList.ForEach(sat =>
+                    lock (satList)
                     {
-                        //if(count%5==0)
-                        allpoints.Add(new double[] { sat.X, sat.Y });
-                        //count++;
-                    });
-                    clusterCounts.Add(satList.Count);
+                        satList.ForEach(sat =>
+                        {
+                            //if(count%5==0)
+                            lock (allpoints)
+                            {
+                                allpoints.Add(new double[] { sat.X, sat.Y });
+                            }
+                            //count++;
+                        });
+                        clusterCounts.Add(satList.Count);
+                    }
                 });
             }
             lock (output)
             {
                 output.ForEach(cluster =>
                 {
-                    outs.Add(new double[] { cluster.X, cluster.Y });
+                    ClusterCenters.Add(new double[] { cluster.X, cluster.Y });
                 });
             }
-            if (allpoints.Count == 0 || outs.Count == 0)
+            if (allpoints.Count == 0 || ClusterCenters.Count == 0)
                 return;
-            if (e.Cancel)
+            if (e.Cancel) 
                 return;
 
-            rbf = new kMeans.RBFLiteCluster(allpoints, outs, gamma, clusterCounts, checkBox1.Checked);
-            //for (int i = 0; i < inputs.Count; i++)
-            //  rbfs.Add(new RBFLiteCluster(, output[i].ConvertAll(new Converter<Cluster, double[]>((pnt) => { return new double[] { pnt.X, pnt.Y }; }))));
+            List<kMeans.RBFLite> rbfs = new List<kMeans.RBFLite>();
+
+            if (!Type1)
+                RBF = new kMeans.RBFLiteCluster(allpoints, ClusterCenters, gamma, clusterCounts, checkBox1.Checked);
+            else
+            {
+                for (int i = 0; i < inputs.Count; i++)
+                    rbfs.Add(new kMeans.RBFLite(inputs[i].ConvertAll(new Converter<Point, double[]>((pnt) => { return new double[] { pnt.X, pnt.Y }; })), new double[] { output[i].Location.X, output[i].Location.Y }, clusterCounts[i], gamma));
+            }
 
             double width = this.Width;
             double height = this.Height;
@@ -97,6 +117,9 @@ namespace WindowsFormsApplication2
 
             double gridResolutionX = width / PixelDensity;
             double gridResolutionY = height / PixelDensity;
+
+            gridRes[0] = gridResolutionX;
+            gridRes[1] = gridResolutionY;
             //double gridResolutionX = width / (1 * 10.0 - 4 * (1 - scaleScreenX));
             //double gridResolutionY = height / (1 * 10.0 - 4 * (1 - scaleScreenY));
             //double x = 0; double y = 0;
@@ -104,19 +127,31 @@ namespace WindowsFormsApplication2
             double xstep = width / gridResolutionX;
             double ystep = height / gridResolutionY;
             List<double> heights = new List<double>();
+            double X = 0;
+            double Y = 0;
+            double Val = 0;
             for (double i = 0; i < gridResolutionX; i++)
             {
                 for (double j = 0; j < gridResolutionY; j++)
                 {
                     if (e.Cancel)
                         return;
-                    double val = 0;
-                    double x = xstep * i;
-                    double y = ystep * j;
-                    val = rbf.Eval(new double[] { x, y });
-                    heights.Add(val);
+                    Val = 0;
+                    X = xstep * i;
+                    Y = ystep * j;
+                    if(Type1)
+                        rbfs.ForEach(rbf => Val += rbf.Eval(new double[] { X, Y }));
+                    else
+                        Val = RBF.Eval(new double[] { X, Y });
+                    heights.Add(Val);
                 }
             }
+
+            double max, min;
+            max = heights.Max();
+            min = heights.Min();
+
+            pntCollection.Clear();
 
             List<ColoredPoint> pnts1 = new List<ColoredPoint>();
             List<ColoredPoint> pnts2 = new List<ColoredPoint>();
@@ -127,160 +162,183 @@ namespace WindowsFormsApplication2
             List<ColoredPoint> pnts7 = new List<ColoredPoint>();
             List<ColoredPoint> pnts8 = new List<ColoredPoint>();
 
-            double max, min;
-            max = heights.Max();
-            min = heights.Min();
+            List<double> vals1 = new List<double>();
+            List<double> vals2 = new List<double>();
+            List<double> vals3 = new List<double>();
+            List<double> vals4 = new List<double>();
+            List<double> vals5 = new List<double>();
+            List<double> vals6 = new List<double>();
+            List<double> vals7 = new List<double>();
+            List<double> vals8 = new List<double>();
+
+            #region Parallel Reads
+
 
             Parallel.Invoke(
                 () =>
                 {
-
+                    double x = 0; double y = 0; double val = 0;
                     for (double i = 0; i < gridResolutionX / 4; i++)
                     {
                         for (double j = 0; j < gridResolutionY / 2; j++)
                         {
-                            double val = 0;
-                            double x = xstep * i;
-                            double y = ystep * j;
-                            val = rbf.Eval(new double[] { x, y });
+                            val = 0;
+                            x = xstep * i;
+                            y = ystep * j;
+                            if(Type1)
+                                rbfs.ForEach(rbf => val += rbf.Eval(new double[] { x, y }));
+                            else
+                                val = RBF.Eval(new double[] { x, y });
                             if (!double.IsNaN(val) && !double.IsInfinity(val))
-                            {
-                                Color c = GetColor(max, min, val);
-                                pnts1.Add(new ColoredPoint(new Point((int)x, (int)y), c));
-                            }
+                                pnts1.Add(new ColoredPoint(new Point((int)x, (int)y), GetColor(max, min, val), val));
+                            
                         }
                     }
                 },
                 () =>
                 {
+                    double x = 0; double y = 0; double val = 0;
                     for (double i = 0; i < gridResolutionX / 4; i++)
                     {
                         for (double j = gridResolutionY / 2; j < gridResolutionY; j++)
                         {
-                            double val = 0;
-                            double x = xstep * i;
-                            double y = ystep * j;
-                            val = rbf.Eval(new double[] { x, y });
+                            val = 0;
+                            x = xstep * i;
+                            y = ystep * j;
+                            if (Type1)
+                                rbfs.ForEach(rbf => val += rbf.Eval(new double[] { x, y }));
+                            else
+                                val = RBF.Eval(new double[] { x, y });
                             if (!double.IsNaN(val) && !double.IsInfinity(val))
-                            {
-                                Color c = GetColor(max, min, val);
-                                pnts2.Add(new ColoredPoint(new Point((int)x, (int)y), c));
-                            }
+                                pnts2.Add(new ColoredPoint(new Point((int)x, (int)y), GetColor(max, min, val), val));
+                            
                         }
                     }
                 },
                 () =>
                 {
+                    double x = 0; double y = 0; double val = 0;
                     for (double i = gridResolutionX / 4; i < gridResolutionX / 2; i++)
                     {
                         for (double j = 0; j < gridResolutionY / 2; j++)
                         {
-                            double val = 0;
-                            double x = xstep * i;
-                            double y = ystep * j;
-                            val = rbf.Eval(new double[] { x, y });
+                            val = 0;
+                            x = xstep * i;
+                            y = ystep * j;
+                            if (Type1)
+                                rbfs.ForEach(rbf => val += rbf.Eval(new double[] { x, y }));
+                            else
+                                val = RBF.Eval(new double[] { x, y });
                             if (!double.IsNaN(val) && !double.IsInfinity(val))
-                            {
-                                Color c = GetColor(max, min, val);
-                                pnts3.Add(new ColoredPoint(new Point((int)x, (int)y), c));
-                            }
+                                pnts3.Add(new ColoredPoint(new Point((int)x, (int)y), GetColor(max, min, val), val));
                         }
                     }
                 },
                 () =>
                 {
+                    double x = 0; double y = 0; double val = 0;
                     for (double i = gridResolutionX / 4; i < gridResolutionX / 2; i++)
                     {
                         for (double j = gridResolutionY / 2; j < gridResolutionY; j++)
                         {
-                            double val = 0;
-                            double x = xstep * i;
-                            double y = ystep * j;
-                            val = rbf.Eval(new double[] { x, y });
+                            val = 0;
+                            x = xstep * i;
+                            y = ystep * j;
+                            if (Type1)
+                                rbfs.ForEach(rbf => val += rbf.Eval(new double[] { x, y }));
+                            else
+                                val = RBF.Eval(new double[] { x, y });
                             if (!double.IsNaN(val) && !double.IsInfinity(val))
-                            {
-                                Color c = GetColor(max, min, val);
-                                pnts4.Add(new ColoredPoint(new Point((int)x, (int)y), c));
-                            }
+                                pnts4.Add(new ColoredPoint(new Point((int)x, (int)y), GetColor(max, min, val), val));
                         }
                     }
                 },
                 () =>
                 {
-
+                    double x = 0; double y = 0; double val = 0;
                     for (double i = gridResolutionX / 2; i < 3 * gridResolutionX / 4; i++)
                     {
                         for (double j = 0; j < gridResolutionY / 2; j++)
                         {
-                            double val = 0;
-                            double x = xstep * i;
-                            double y = ystep * j;
-                            val = rbf.Eval(new double[] { x, y });
+                            val = 0;
+                            x = xstep * i;
+                            y = ystep * j;
+                            if (Type1)
+                                rbfs.ForEach(rbf => val += rbf.Eval(new double[] { x, y }));
+                            else
+                                val = RBF.Eval(new double[] { x, y });
                             if (!double.IsNaN(val) && !double.IsInfinity(val))
-                            {
-                                Color c = GetColor(max, min, val);
-                                pnts5.Add(new ColoredPoint(new Point((int)x, (int)y), c));
-
-                            }
+                                pnts5.Add(new ColoredPoint(new Point((int)x, (int)y), GetColor(max, min, val), val));             
                         }
                     }
                 },
                 () =>
                 {
+                    double x = 0; double y = 0; double val = 0;
                     for (double i = gridResolutionX / 2; i < 3 * gridResolutionX / 4; i++)
                     {
                         for (double j = gridResolutionY / 2; j < gridResolutionY; j++)
                         {
-                            double val = 0;
-                            double x = xstep * i;
-                            double y = ystep * j;
-                            val = rbf.Eval(new double[] { x, y });
+                            val = 0;
+                            x = xstep * i;
+                            y = ystep * j;
+                            if (Type1)
+                                rbfs.ForEach(rbf => val += rbf.Eval(new double[] { x, y }));
+                            else
+                                val = RBF.Eval(new double[] { x, y });
                             if (!double.IsNaN(val) && !double.IsInfinity(val))
-                            {
-                                Color c = GetColor(max, min, val);
-                                pnts6.Add(new ColoredPoint(new Point((int)x, (int)y), c));
-                            }
+                                pnts6.Add(new ColoredPoint(new Point((int)x, (int)y), GetColor(max, min, val), val));       
                         }
                     }
                 },
                 () =>
                 {
+                    double x = 0; double y = 0; double val = 0;
                     for (double i = 3 * gridResolutionX / 4; i < gridResolutionX; i++)
                     {
                         for (double j = 0; j < gridResolutionY / 2; j++)
                         {
-                            double val = 0;
-                            double x = xstep * i;
-                            double y = ystep * j;
-                            val = rbf.Eval(new double[] { x, y });
+                            val = 0;
+                            x = xstep * i;
+                            y = ystep * j;
+                            if (Type1)
+                                rbfs.ForEach(rbf => val += rbf.Eval(new double[] { x, y }));
+                            else
+                                val = RBF.Eval(new double[] { x, y });
                             if (!double.IsNaN(val) && !double.IsInfinity(val))
-                            {
-                                Color c = GetColor(max, min, val);
-                                pnts7.Add(new ColoredPoint(new Point((int)x, (int)y), c));
-
-                            }
+                                pnts7.Add(new ColoredPoint(new Point((int)x, (int)y), GetColor(max, min, val), val));
                         }
                     }
                 },
                 () =>
                 {
+                    double x = 0; double y = 0; double val = 0;
                     for (double i = 3 * gridResolutionX / 4; i < gridResolutionX; i++)
                     {
                         for (double j = gridResolutionY / 2; j < gridResolutionY; j++)
                         {
-                            double val = 0;
-                            double x = xstep * i;
-                            double y = ystep * j;
-                            val = rbf.Eval(new double[] { x, y });
+                            val = 0;
+                            x = xstep * i;
+                            y = ystep * j;
+                            if (Type1)
+                                rbfs.ForEach(rbf => val += rbf.Eval(new double[] { x, y }));
+                            else
+                                val = RBF.Eval(new double[] { x, y });
                             if (!double.IsNaN(val) && !double.IsInfinity(val))
-                            {
-                                Color c = GetColor(max, min, val);
-                                pnts8.Add(new ColoredPoint(new Point((int)x, (int)y), c));
-                            }
+                                pnts8.Add(new ColoredPoint(new Point((int)x, (int)y), GetColor(max, min, val), val));   
                         }
                     }
                 }
                 );
+
+            pntCollection.Add(new List<ColoredPoint>(pnts1));
+            pntCollection.Add(pnts2);
+            pntCollection.Add(pnts3);
+            pntCollection.Add(pnts4);
+            pntCollection.Add(pnts5);
+            pntCollection.Add(pnts6);
+            pntCollection.Add(pnts7);
+            pntCollection.Add(pnts8);
 
             coloredPoints.Clear();
             coloredPoints.AddRange(pnts1);
@@ -292,28 +350,34 @@ namespace WindowsFormsApplication2
             coloredPoints.AddRange(pnts7);
             coloredPoints.AddRange(pnts8);
 
+            #endregion Parallel Reads
+            
+
+            //double x = 0; double y = 0;
             //for (double i = 0; i < gridResolutionX; i++)
             //{
             //    for (double j = 0; j < gridResolutionY; j++)
             //    {
             //        if (e.Cancel)
             //            return;
-            //        double val = 0;
+            //        val = 0;
             //        x = xstep * i;
             //        y = ystep * j;
-            //        val = rbf.Eval(new double[] { x, y });
+            //      //  val = rbf.Eval(new double[] { x, y });
+            //        rbfs.ForEach(rbf => val += rbf.Eval(new double[] { x, y }));
             //        if (!double.IsNaN(val) && !double.IsInfinity(val))
             //        {
-            //            Color c = GetColor(heights.Max(), heights.Min(), val);
+            //            Color c = GetColor(max, min, val);
             //            coloredPoints.Add(new ColoredPoint(new Point((int)x, (int)y), c));
+                        
             //        }
             //    }
             //}
-
+            //pntCollection.Add(coloredPoints);
         }
 
         int HiddenNodeCount = 3;
-        kMeans.RBFLiteCluster rbf;
+        kMeans.RBFLiteCluster RBF;
         List<ColoredPoint> coloredPoints = new List<ColoredPoint>();
 
         public System.Drawing.Color InterpolateBetweenColors(double max, double min, double val, System.Drawing.Color StartColor, System.Drawing.Color EndColor)
@@ -420,7 +484,6 @@ namespace WindowsFormsApplication2
             if (worker.IsBusy)
             {
                 worker.CancelAsync();
-                System.Threading.Thread.Sleep(100);
                 Application.DoEvents();
                 return;
             }
@@ -489,25 +552,39 @@ namespace WindowsFormsApplication2
         {
             Main.Form1_MouseUp(sender, e);
         }
+
+        private void MultRBF_SizeChanged(object sender, EventArgs e)
+        {
+            surfaceForm.Size = new Size(this.Size.Width, this.Size.Height);
+        }
     }
 
     public class ColoredPoint
     {
         public Color color = Color.White;
         Point p = new Point();
+        public double val = 0;
 
         public int X
         {
             get { return p.X; }
+            set { p.X = value; }
         }
 
         public int Y
         {
             get { return p.Y; }
+            set { p.Y = value; }
         }
 
         public ColoredPoint(Point pnt, Color c)
         {
+            p = new Point(pnt.X, pnt.Y);
+            color = c;
+        }
+        public ColoredPoint(Point pnt, Color c, double value)
+        {
+            val = value;
             p = new Point(pnt.X, pnt.Y);
             color = c;
         }

@@ -92,5 +92,20 @@ namespace WindowsFormsApplication2
             main.gamma = (double)(gammaSlider.Value)/1000.0;
             gammaLabel.Text = "gamma = " + ((double)(gammaSlider.Value) / 1000.0).ToString("#0.000");
         }
+        bool hidden = false;
+        private void button3_Click(object sender, EventArgs e)
+        {
+            hidden = !hidden;
+            if (hidden)
+                main.Hide();
+            else
+                main.Show();
+        }
+
+        private void checkBox6_CheckedChanged(object sender, EventArgs e)
+        {
+            if (main.rbfframe != null)
+                main.rbfframe.Type1 = checkBox6.Checked;
+        }
     }
 }

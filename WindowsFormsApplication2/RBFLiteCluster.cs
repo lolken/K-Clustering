@@ -20,35 +20,53 @@ namespace kMeans
         public RBFLiteCluster(List<double[]> inputs, List<double[]> output, double g, List<double> clusterCount, bool RBFType)
         {
             gamma = g;
-            if (!RBFType)
+            if (RBFType)
             {
                 centers = new List<double[]>(inputs);
                 cluster = new List<double[]>(output);
                 List<double> distances = new List<double>(inputs.Count);
                 double[,] phiMat = new double[centers.Count, cluster.Count];
-                for (int i = 0; i < centers.Count; i++)
-                    for (int j = 0; j < cluster.Count; j++)
-                    {
-                        phiMat[i, j] = Math.Exp(-gamma * getDistance(cluster[j], centers[i]));
-                    }
+                double val = 0;
 
-                double max = double.MinValue;
                 double distance = 0;
                 for (int i = 0; i < centers.Count; i++)
                 {
-                    distance = 0;
-                    max = double.MinValue;
+                    for (int j = 0; j < cluster.Count; j++)
+                    {
+                        distance = getDistance(centers[i], cluster[j]);
+                        val = Math.Pow(distance, 2) * Math.Log(distance);
+                        phiMat[i, j] = double.IsNaN(val) ? 0 : val;
+                    }
+                }
+                //weights = solve(phiMat, output.ToArray());
+                double min = double.MinValue;
+                //double distance = 0;
+                int indexOfCluster = -1;
+
+                for (int i = 0; i < centers.Count; i++)
+                {
+                    //distance = 0;
+                    min = double.MaxValue;
                     for (int j = 0; j < cluster.Count; j++)
                     {
                         distance = getDistance(cluster[j], centers[i]);
-                        if (distance > max)
-                            max = distance;
+                        if (distance < min)
+                        {
+                            min = distance;
+                            indexOfCluster = j;
+                        }
                     }
-                    distances.Add(max);
+                    distances.Add(min);
                 }
+
+                double max = distances.Max();
+                min = distances.Min();
+                List<double> tmp = new List<double>();
+                distances.ForEach(pnt => { tmp.Add(pnt / (max - min)); });
+
                 //inputs.ForEach(val => { distances.Add(1000); });
 
-                weights = solveCluster(phiMat, distances.ToArray());
+                weights = solveCluster(phiMat, tmp.ToArray());
             }
             else
             {
@@ -57,10 +75,12 @@ namespace kMeans
                 List<double> distances = new List<double>(inputs.Count);
                 double[,] phiMat = new double[centers.Count, cluster.Count];
                 for (int i = 0; i < centers.Count; i++)
+                {
                     for (int j = 0; j < cluster.Count; j++)
                     {
                         phiMat[i, j] = Math.Exp(-gamma * getDistance(cluster[j], centers[i]));
                     }
+                }
 
                 weights = solveCluster(phiMat, clusterCount.ToArray());
             }

@@ -52,6 +52,9 @@
             this.checkBox5 = new System.Windows.Forms.CheckBox();
             this.gammaSlider = new System.Windows.Forms.TrackBar();
             this.gammaLabel = new System.Windows.Forms.Label();
+            this.button2 = new System.Windows.Forms.Button();
+            this.button3 = new System.Windows.Forms.Button();
+            this.checkBox6 = new System.Windows.Forms.CheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.trackBar1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.gammaSlider)).BeginInit();
             this.SuspendLayout();
@@ -59,7 +62,7 @@
             // startBut
             // 
             this.startBut.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.startBut.Location = new System.Drawing.Point(24, 487);
+            this.startBut.Location = new System.Drawing.Point(24, 502);
             this.startBut.Name = "startBut";
             this.startBut.Size = new System.Drawing.Size(75, 23);
             this.startBut.TabIndex = 2;
@@ -71,7 +74,7 @@
             // 
             this.button1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.button1.BackColor = System.Drawing.Color.Red;
-            this.button1.Location = new System.Drawing.Point(24, 516);
+            this.button1.Location = new System.Drawing.Point(24, 531);
             this.button1.Name = "button1";
             this.button1.Size = new System.Drawing.Size(75, 23);
             this.button1.TabIndex = 3;
@@ -175,7 +178,7 @@
             // fpslabel
             // 
             this.fpslabel.AutoSize = true;
-            this.fpslabel.Location = new System.Drawing.Point(43, 542);
+            this.fpslabel.Location = new System.Drawing.Point(43, 557);
             this.fpslabel.Name = "fpslabel";
             this.fpslabel.Size = new System.Drawing.Size(22, 13);
             this.fpslabel.TabIndex = 17;
@@ -184,7 +187,7 @@
             // label7
             // 
             this.label7.AutoSize = true;
-            this.label7.Location = new System.Drawing.Point(65, 542);
+            this.label7.Location = new System.Drawing.Point(65, 557);
             this.label7.Name = "label7";
             this.label7.Size = new System.Drawing.Size(21, 13);
             this.label7.TabIndex = 18;
@@ -277,8 +280,8 @@
             // 
             // gammaSlider
             // 
-            this.gammaSlider.Location = new System.Drawing.Point(12, 403);
-            this.gammaSlider.Maximum = 100;
+            this.gammaSlider.Location = new System.Drawing.Point(11, 422);
+            this.gammaSlider.Maximum = 500;
             this.gammaSlider.Minimum = 1;
             this.gammaSlider.Name = "gammaSlider";
             this.gammaSlider.Size = new System.Drawing.Size(104, 45);
@@ -289,17 +292,52 @@
             // gammaLabel
             // 
             this.gammaLabel.AutoSize = true;
-            this.gammaLabel.Location = new System.Drawing.Point(25, 435);
+            this.gammaLabel.Location = new System.Drawing.Point(25, 454);
             this.gammaLabel.Name = "gammaLabel";
             this.gammaLabel.Size = new System.Drawing.Size(74, 13);
             this.gammaLabel.TabIndex = 25;
             this.gammaLabel.Text = "gamma = 0.01";
+            // 
+            // button2
+            // 
+            this.button2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.button2.Location = new System.Drawing.Point(11, 473);
+            this.button2.Name = "button2";
+            this.button2.Size = new System.Drawing.Size(39, 23);
+            this.button2.TabIndex = 26;
+            this.button2.Text = "RBF";
+            this.button2.UseVisualStyleBackColor = true;
+            // 
+            // button3
+            // 
+            this.button3.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.button3.Location = new System.Drawing.Point(68, 473);
+            this.button3.Name = "button3";
+            this.button3.Size = new System.Drawing.Size(54, 23);
+            this.button3.TabIndex = 27;
+            this.button3.Text = "KMeans";
+            this.button3.UseVisualStyleBackColor = true;
+            this.button3.Click += new System.EventHandler(this.button3_Click);
+            // 
+            // checkBox6
+            // 
+            this.checkBox6.AutoSize = true;
+            this.checkBox6.Location = new System.Drawing.Point(19, 391);
+            this.checkBox6.Name = "checkBox6";
+            this.checkBox6.Size = new System.Drawing.Size(96, 17);
+            this.checkBox6.TabIndex = 28;
+            this.checkBox6.Text = "Show Network";
+            this.checkBox6.UseVisualStyleBackColor = true;
+            this.checkBox6.CheckedChanged += new System.EventHandler(this.checkBox6_CheckedChanged);
             // 
             // ClusterController
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(128, 577);
+            this.Controls.Add(this.checkBox6);
+            this.Controls.Add(this.button3);
+            this.Controls.Add(this.button2);
             this.Controls.Add(this.gammaLabel);
             this.Controls.Add(this.gammaSlider);
             this.Controls.Add(this.checkBox5);
@@ -361,5 +399,8 @@
         private System.Windows.Forms.CheckBox checkBox5;
         private System.Windows.Forms.TrackBar gammaSlider;
         private System.Windows.Forms.Label gammaLabel;
+        public System.Windows.Forms.Button button2;
+        public System.Windows.Forms.Button button3;
+        private System.Windows.Forms.CheckBox checkBox6;
     }
 }
